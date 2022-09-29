@@ -25,3 +25,6 @@ TAGS
 # Haddock files and Hoogle databases 
 haddock 
 hoo
+
+# Dhall
+.history

@@ -115,6 +115,8 @@ common deps
     , wai
     , wai-cors
     , warp
+    , dhall
+    , dhall-recursive-adt
 
   mixins:
 
