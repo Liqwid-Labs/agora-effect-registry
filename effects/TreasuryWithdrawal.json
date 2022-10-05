@@ -1,0 +1,40 @@
+{
+    "meta": {
+        "name": "TreasuryWithdrawal",
+        "description": "..."
+    },
+    "scriptHash": "...",
+    "schema": {
+        "type": "oneOf",
+        "options": [
+            {
+                "meta": {
+                    "name": "Receivers"
+                },
+                "type": "constr",
+                "tag": 0,
+                "fields": [
+                    {
+                        "type": "list",
+                        "elements": {
+                            "type": "constr",
+                            "tag": 0,
+                            "fields": [
+                                {
+                                    "meta": {
+                                        "name": "Receiver",
+                                        "description": "The address the value will be sent to"
+                                    },
+                                    "type": "plutus/Address"
+                                },
+                                {
+                                    "type": "plutus/Value"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

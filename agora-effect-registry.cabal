@@ -122,13 +122,15 @@ common deps
 
 library
   import:          lang, deps
-  hs-source-dirs:  src
+  hs-source-dirs:  agora-effect-registry
   exposed-modules:
+    AgoraRegistry.Schema
+    AgoraRegistry
 
   other-modules:
 
 executable agora-effect-registry-exe
   import:         lang, deps
-  hs-source-dirs: app
+  hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
   build-depends:  agora-effect-registry
