@@ -95,6 +95,7 @@ common deps
     , containers
     , data-default
     , data-default-class
+    , extra
     , generics-sop
     , gitrev
     , hashable
