@@ -118,6 +118,7 @@ common deps
     , warp
     , dhall
     , dhall-recursive-adt
+    , utf8-string
 
   mixins:
 
