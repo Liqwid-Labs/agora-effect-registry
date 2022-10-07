@@ -78,7 +78,7 @@ common lang
     UndecidableInstances
     ViewPatterns
     NoFieldSelectors
-    
+
   default-language:   Haskell2010
 
 common deps
@@ -95,6 +95,8 @@ common deps
     , containers
     , data-default
     , data-default-class
+    , dhall
+    , dhall-recursive-adt
     , extra
     , generics-sop
     , gitrev
@@ -113,12 +115,10 @@ common deps
     , tagged
     , template-haskell
     , text
+    , utf8-string
     , wai
     , wai-cors
     , warp
-    , dhall
-    , dhall-recursive-adt
-    , utf8-string
 
   mixins:
 
@@ -126,8 +126,11 @@ library
   import:          lang, deps
   hs-source-dirs:  agora-effect-registry
   exposed-modules:
-    AgoraRegistry.Schema
     AgoraRegistry
+    AgoraRegistry.Dev
+    AgoraRegistry.DatumValidation
+    AgoraRegistry.Parsing
+    AgoraRegistry.Schema
 
   other-modules:
 

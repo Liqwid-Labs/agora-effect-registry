@@ -1,81 +1,76 @@
 module AgoraRegistry.Schema (
-  Effect (..),
+  EffectSchema (..),
   Schema (..),
   Metadata (..),
 ) where
 
-import Data.Aeson ( (.:), FromJSON(parseJSON) )
+import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as Aeson
-import Data.Aeson.Types qualified as Aeson
-
-import qualified Data.Text as Text
-import qualified Data.ByteString.UTF8 as UTF8 (fromString)
-import qualified Data.ByteString.Base16 as Base16 (decodeBase16)
 import Data.Text (Text)
 import PlutusLedgerApi.V2 qualified as Plutus
-import Data.Either (isRight)
+
 import GHC.Generics (Generic)
+
+-- import Control.Applicative (many)
+import AgoraRegistry.Parsing (parseHash)
 
 data Metadata = Metadata
   { name :: Text
   , description :: Text
-  } deriving stock (Generic)
+  }
+  deriving stock (Show, Generic)
 
 instance Aeson.FromJSON Metadata
 
-
-data Effect = Effect
+data EffectSchema = EffectSchema
   { meta :: Metadata
   , scriptHash :: Plutus.ScriptHash
   , datumSchema :: Schema
   }
+  deriving stock (Show)
 
-instance Aeson.FromJSON Effect where
-  parseJSON = Aeson.withObject "Effect" $ \o -> do
+instance Aeson.FromJSON EffectSchema where
+  parseJSON = Aeson.withObject "EffectSchema" $ \o -> do
     meta <- o .: "meta"
-    scriptHash <- parseHash28 =<< ( o .: "scriptHas")
+    scriptHash <- parseHash 28 =<< (o .: "scriptHash")
     datumSchema <- o .: "datumSchema"
-    pure $ Effect meta scriptHash datumSchema
+    pure $ EffectSchema meta scriptHash datumSchema
 
 data Schema = Schema
-  { meta :: Metadata
+  { meta :: Maybe Metadata
   , schema :: DatumSchema
   }
+  deriving stock (Show)
 
 instance Aeson.FromJSON Schema where
-  parseJSON v  = flip (Aeson.withObject "Schema") v $ \o -> do
-    meta <- o .: "meta"
-    schema <- parseJSON v
+  parseJSON v = flip (Aeson.withObject "Schema") v $ \o -> do
+    meta <- o .:? "meta"
+    schema <- Aeson.parseJSON v
     pure $ Schema meta schema
 
-parseHash28 :: String -> Aeson.Parser Plutus.ScriptHash
-parseHash28 s = Plutus.ScriptHash <$> do
-  bts <- either (fail . Text.unpack) pure  (Base16.decodeBase16 (UTF8.fromString s ))
-  pure $ Plutus.toBuiltin bts
-
-
-
 data DatumSchema
-  = ListSchema [Schema]
-  | ConstrSchema [(Integer, [Schema])]
+  = ListSchema Schema
+  | ShapedListSchema [Schema]
+  | ConstrSchema Integer [Schema]
   | OneOfSchema [Schema]
-  | MapSchema [(Schema, Schema)]
+  | MapSchema Schema Schema
   | IntegerSchema
   | ByteStringDatum
   | PlutusSchema PlutusTypeSchema
+  deriving stock (Show)
 
 instance Aeson.FromJSON DatumSchema where
-  parseJSON v = flip (Aeson.withObject "Effect") v $ \o -> do
+  parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
     schemaType :: String <- o .: "type"
     case schemaType of
       "list" -> ListSchema <$> o .: "elements"
-      "constr" -> undefined --ConstrSchema <$> o .: "items"
+      "shaped_list" -> ShapedListSchema <$> o .: "elements"
+      "constr" -> ConstrSchema <$> o .: "tag" <*> o .: "fields"
       "oneOf" -> OneOfSchema <$> o .: "options"
-      "map" -> undefined -- MapSchema <$> o .: "items"
+      "map" -> MapSchema <$> o .: "keys" <*> o .: "values"
       "integer" -> pure IntegerSchema
       "bytes" -> pure ByteStringDatum
-      _ -> PlutusSchema <$> parseJSON v
-
+      _ -> PlutusSchema <$> Aeson.parseJSON v
 
 data PlutusTypeSchema
   = AddressSchema
@@ -84,13 +79,17 @@ data PlutusTypeSchema
   | AssetClassSchema
   | Hash32Schema
   | Hash28Schema
-
+  deriving stock (Show)
 
 instance Aeson.FromJSON PlutusTypeSchema where
-  parseJSON = undefined
-
-validateJsonDatum' :: Schema -> Aeson.Value -> Bool
-validateJsonDatum' s = isRight . validateJsonDatum s
-
-validateJsonDatum :: Schema -> Aeson.Value -> Either String Plutus.Data
-validateJsonDatum = undefined
+  parseJSON v = flip (Aeson.withObject "") v $ \o -> do
+    schemaType :: String <- o .: "type"
+    maybe (fail "Unknown schema type.") pure $
+      case schemaType of
+        "plutus/Address" -> Just AddressSchema
+        "plutus/Value" -> Just ValueSchema
+        "plutus/Credential" -> Just CredentialSchema
+        "plutus/AssetClass" -> Just AssetClassSchema
+        "plutus/Hash32" -> Just Hash32Schema
+        "plutus/Hash28" -> Just Hash28Schema
+        _ -> Nothing
