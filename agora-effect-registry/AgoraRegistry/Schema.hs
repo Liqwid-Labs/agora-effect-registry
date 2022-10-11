@@ -1,12 +1,18 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module AgoraRegistry.Schema (
   EffectSchema (..),
-  Schema (..),
+  Schema,
+  Schema' (..),
+  DatumSchema (..),
   Metadata (..),
+  PlutusTypeSchema (..),
 ) where
 
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as Aeson
 import Data.Text (Text)
+import Optics.TH (makeFieldLabelsNoPrefix)
 import PlutusLedgerApi.V2 qualified as Plutus
 
 import GHC.Generics (Generic)
@@ -20,57 +26,22 @@ data Metadata = Metadata
   }
   deriving stock (Show, Generic)
 
+makeFieldLabelsNoPrefix ''Metadata
 instance Aeson.FromJSON Metadata
 
-data EffectSchema = EffectSchema
-  { meta :: Metadata
-  , scriptHash :: Plutus.ScriptHash
-  , datumSchema :: Schema
-  }
-  deriving stock (Show)
-
-instance Aeson.FromJSON EffectSchema where
-  parseJSON = Aeson.withObject "EffectSchema" $ \o -> do
-    meta <- o .: "meta"
-    scriptHash <- parseHash 28 =<< (o .: "scriptHash")
-    datumSchema <- o .: "datumSchema"
-    pure $ EffectSchema meta scriptHash datumSchema
-
-data Schema = Schema
+data Schema' a = Schema
   { meta :: Maybe Metadata
-  , schema :: DatumSchema
+  , schema :: a
   }
   deriving stock (Show)
 
-instance Aeson.FromJSON Schema where
+makeFieldLabelsNoPrefix ''Schema'
+
+instance Aeson.FromJSON a => Aeson.FromJSON (Schema' a) where
   parseJSON v = flip (Aeson.withObject "Schema") v $ \o -> do
     meta <- o .:? "meta"
     schema <- Aeson.parseJSON v
     pure $ Schema meta schema
-
-data DatumSchema
-  = ListSchema Schema
-  | ShapedListSchema [Schema]
-  | ConstrSchema Integer [Schema]
-  | OneOfSchema [Schema]
-  | MapSchema Schema Schema
-  | IntegerSchema
-  | ByteStringDatum
-  | PlutusSchema PlutusTypeSchema
-  deriving stock (Show)
-
-instance Aeson.FromJSON DatumSchema where
-  parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
-    schemaType :: String <- o .: "type"
-    case schemaType of
-      "list" -> ListSchema <$> o .: "elements"
-      "shaped_list" -> ShapedListSchema <$> o .: "elements"
-      "constr" -> ConstrSchema <$> o .: "tag" <*> o .: "fields"
-      "oneOf" -> OneOfSchema <$> o .: "options"
-      "map" -> MapSchema <$> o .: "keys" <*> o .: "values"
-      "integer" -> pure IntegerSchema
-      "bytes" -> pure ByteStringDatum
-      _ -> PlutusSchema <$> Aeson.parseJSON v
 
 data PlutusTypeSchema
   = AddressSchema
@@ -82,7 +53,7 @@ data PlutusTypeSchema
   deriving stock (Show)
 
 instance Aeson.FromJSON PlutusTypeSchema where
-  parseJSON v = flip (Aeson.withObject "") v $ \o -> do
+  parseJSON v = flip (Aeson.withObject "PlutusTypeSchema") v $ \o -> do
     schemaType :: String <- o .: "type"
     maybe (fail "Unknown schema type.") pure $
       case schemaType of
@@ -93,3 +64,47 @@ instance Aeson.FromJSON PlutusTypeSchema where
         "plutus/Hash32" -> Just Hash32Schema
         "plutus/Hash28" -> Just Hash28Schema
         _ -> Nothing
+
+data DatumSchema
+  = ListSchema Schema
+  | ShapedListSchema [Schema]
+  | ConstrSchema Integer [Schema]
+  | OneOfSchema [Schema]
+  | MapSchema Schema Schema
+  | IntegerSchema
+  | ByteStringSchema
+  | PlutusSchema PlutusTypeSchema
+  deriving stock (Show)
+
+type Schema = Schema' DatumSchema
+
+makeFieldLabelsNoPrefix ''DatumSchema
+
+instance Aeson.FromJSON DatumSchema where
+  parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
+    schemaType :: String <- o .: "type"
+    case schemaType of
+      "list" -> ListSchema <$> o .: "elements"
+      "shaped_list" -> ShapedListSchema <$> o .: "elements"
+      "constr" -> ConstrSchema <$> o .: "tag" <*> o .: "fields"
+      "oneOf" -> OneOfSchema <$> o .: "options"
+      "map" -> MapSchema <$> o .: "keys" <*> o .: "values"
+      "integer" -> pure IntegerSchema
+      "bytes" -> pure ByteStringSchema
+      _ -> PlutusSchema <$> Aeson.parseJSON v
+
+data EffectSchema = EffectSchema
+  { meta :: Metadata
+  , scriptHash :: Plutus.ScriptHash
+  , datumSchema :: Schema
+  }
+  deriving stock (Show)
+
+makeFieldLabelsNoPrefix ''EffectSchema
+
+instance Aeson.FromJSON EffectSchema where
+  parseJSON = Aeson.withObject "EffectSchema" $ \o -> do
+    meta <- o .: "meta"
+    scriptHash <- Plutus.ScriptHash <$> (parseHash 28 =<< o .: "scriptHash")
+    datumSchema <- o .: "datumSchema"
+    pure $ EffectSchema meta scriptHash datumSchema

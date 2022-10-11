@@ -3,9 +3,9 @@ module AgoraRegistry.Dev (
   parseFixture,
 ) where
 
+import AgoraRegistry.Schema (EffectSchema)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy qualified as B
-import AgoraRegistry.Schema (EffectSchema)
 
 ------------------------------------
 

@@ -102,6 +102,8 @@ common deps
     , gitrev
     , hashable
     , http-types
+    , optics-core
+    , optics-th
     , optparse-applicative
     , plutarch
     , plutus-core
@@ -127,8 +129,8 @@ library
   hs-source-dirs:  agora-effect-registry
   exposed-modules:
     AgoraRegistry
-    AgoraRegistry.Dev
     AgoraRegistry.DatumValidation
+    AgoraRegistry.Dev
     AgoraRegistry.Parsing
     AgoraRegistry.Schema
 
