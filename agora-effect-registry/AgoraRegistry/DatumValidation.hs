@@ -1,25 +1,29 @@
 module AgoraRegistry.DatumValidation (
+  validateEffectDatum,
   validateJsonDatum,
-  validateJsonDatum',
 ) where
 
 import AgoraRegistry.Parsing (parseHash, parseHex)
-import AgoraRegistry.Schema (DatumSchema (ByteStringSchema, ConstrSchema, IntegerSchema, ListSchema, MapSchema, PlutusSchema, ShapedListSchema), PlutusTypeSchema (AddressSchema, CredentialSchema, Hash28Schema, Hash32Schema, ValueSchema))
+import AgoraRegistry.Schema (DatumSchema (ByteStringSchema, ConstrSchema, IntegerSchema, ListSchema, MapSchema, PlutusSchema, ShapedListSchema), EffectSchema, PlutusTypeSchema (AddressSchema, CredentialSchema, Hash28Schema, Hash32Schema, ValueSchema))
 import Control.Applicative ((<|>))
 import Control.Monad (unless, when, zipWithM)
 import Data.Aeson (withObject, (.:))
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Types (parseEither)
 import Data.Aeson.Types qualified as Aeson
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.ByteString (ByteString)
 import Data.List.Extra (groupSortBy)
-import Data.Maybe (isJust)
 import Data.Ord (comparing)
-import Optics.Core (view)
+import Data.Text qualified as T
+import Optics.Core (view, (%))
 import PlutusLedgerApi.V2 qualified as Plutus
 
-validateJsonDatum' :: DatumSchema -> Aeson.Value -> Bool
-validateJsonDatum' s = isJust . Aeson.parseMaybe (validateJsonDatum s)
+validateEffectDatum :: EffectSchema -> Aeson.Value -> Either String Plutus.Data
+validateEffectDatum es = parseEither (validateEffectDatum' es)
+
+validateEffectDatum' :: EffectSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
+validateEffectDatum' es = validateJsonDatum (view (#datumSchema % #schema) es)
 
 validateJsonDatum :: DatumSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
 validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> do
@@ -95,8 +99,8 @@ parseValue v = flip (Aeson.withObject "plutus/value") v $ \o -> do
 
     parseFlatten :: Aeson.Object -> Aeson.Parser (Plutus.CurrencySymbol, Plutus.TokenName, Integer)
     parseFlatten o = do
-      csStr :: String <- o .: "currencySymbol"
-      cs <- Plutus.CurrencySymbol <$> if null csStr then pure (Plutus.toBuiltin ("" :: ByteString)) else parseHash 28 csStr
+      csStr <- o .: "currencySymbol"
+      cs <- Plutus.CurrencySymbol <$> if T.null csStr then pure (Plutus.toBuiltin ("" :: ByteString)) else parseHash 28 csStr
       tn <- Plutus.TokenName . Plutus.toBuiltin <$> (parseHex =<< o .: "tokenName")
       amount <- o .: "amount"
       pure (cs, tn, amount)

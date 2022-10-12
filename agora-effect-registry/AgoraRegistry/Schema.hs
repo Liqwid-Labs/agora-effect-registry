@@ -11,14 +11,12 @@ module AgoraRegistry.Schema (
 
 import Data.Aeson ((.:), (.:?))
 import Data.Aeson qualified as Aeson
+import Data.ByteString (ByteString)
 import Data.Text (Text)
-import Optics.TH (makeFieldLabelsNoPrefix)
-import PlutusLedgerApi.V2 qualified as Plutus
-
 import GHC.Generics (Generic)
+import Optics.TH (makeFieldLabelsNoPrefix)
 
--- import Control.Applicative (many)
-import AgoraRegistry.Parsing (parseHash)
+import AgoraRegistry.Parsing (parseHex')
 
 data Metadata = Metadata
   { name :: Text
@@ -54,7 +52,7 @@ data PlutusTypeSchema
 
 instance Aeson.FromJSON PlutusTypeSchema where
   parseJSON v = flip (Aeson.withObject "PlutusTypeSchema") v $ \o -> do
-    schemaType :: String <- o .: "type"
+    schemaType :: Text <- o .: "type"
     maybe (fail "Unknown schema type.") pure $
       case schemaType of
         "plutus/Address" -> Just AddressSchema
@@ -82,7 +80,7 @@ makeFieldLabelsNoPrefix ''DatumSchema
 
 instance Aeson.FromJSON DatumSchema where
   parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
-    schemaType :: String <- o .: "type"
+    schemaType :: Text <- o .: "type"
     case schemaType of
       "list" -> ListSchema <$> o .: "elements"
       "shaped_list" -> ShapedListSchema <$> o .: "elements"
@@ -95,7 +93,7 @@ instance Aeson.FromJSON DatumSchema where
 
 data EffectSchema = EffectSchema
   { meta :: Metadata
-  , scriptHash :: Plutus.ScriptHash
+  , scriptHash :: ByteString
   , datumSchema :: Schema
   }
   deriving stock (Show)
@@ -105,6 +103,6 @@ makeFieldLabelsNoPrefix ''EffectSchema
 instance Aeson.FromJSON EffectSchema where
   parseJSON = Aeson.withObject "EffectSchema" $ \o -> do
     meta <- o .: "meta"
-    scriptHash <- Plutus.ScriptHash <$> (parseHash 28 =<< o .: "scriptHash")
+    scriptHash <- parseHex' 28 =<< o .: "scriptHash"
     datumSchema <- o .: "datumSchema"
     pure $ EffectSchema meta scriptHash datumSchema

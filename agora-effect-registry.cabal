@@ -91,12 +91,11 @@ common deps
     , bytestring
     , cache
     , cardano-binary
+    , cborg
     , clock
     , containers
     , data-default
     , data-default-class
-    , dhall
-    , dhall-recursive-adt
     , extra
     , generics-sop
     , gitrev
@@ -105,16 +104,13 @@ common deps
     , optics-core
     , optics-th
     , optparse-applicative
-    , plutarch
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
     , prettyprinter
-    , recursion-schemes
     , serialise
     , servant
     , servant-server
-    , tagged
     , template-haskell
     , text
     , utf8-string
