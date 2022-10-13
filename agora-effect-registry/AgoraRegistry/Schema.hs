@@ -7,6 +7,7 @@ module AgoraRegistry.Schema (
   DatumSchema (..),
   Metadata (..),
   PlutusTypeSchema (..),
+  schemaName,
 ) where
 
 import Data.Aeson ((.:), (.:?))
@@ -17,6 +18,7 @@ import GHC.Generics (Generic)
 import Optics.TH (makeFieldLabelsNoPrefix)
 
 import AgoraRegistry.Parsing (parseHex')
+import Data.List.NonEmpty (NonEmpty)
 
 data Metadata = Metadata
   { name :: Text
@@ -50,6 +52,15 @@ data PlutusTypeSchema
   | Hash28Schema
   deriving stock (Show)
 
+plutusTypeSchemaName :: PlutusTypeSchema -> String
+plutusTypeSchemaName = \case
+  AddressSchema -> "plutus/Address"
+  ValueSchema -> "plutus/Value"
+  CredentialSchema -> "plutus/Credential"
+  AssetClassSchema -> "plutus/AssetClass"
+  Hash32Schema -> "plutus/Hash32"
+  Hash28Schema -> "plutus/Hash28"
+
 instance Aeson.FromJSON PlutusTypeSchema where
   parseJSON v = flip (Aeson.withObject "PlutusTypeSchema") v $ \o -> do
     schemaType :: Text <- o .: "type"
@@ -65,9 +76,9 @@ instance Aeson.FromJSON PlutusTypeSchema where
 
 data DatumSchema
   = ListSchema Schema
-  | ShapedListSchema [Schema]
-  | ConstrSchema Integer [Schema]
-  | OneOfSchema [Schema]
+  | ShapedListSchema (NonEmpty Schema)
+  | ConstrSchema Integer (NonEmpty Schema)
+  | OneOfSchema (NonEmpty Schema)
   | MapSchema Schema Schema
   | IntegerSchema
   | ByteStringSchema
@@ -90,6 +101,17 @@ instance Aeson.FromJSON DatumSchema where
       "integer" -> pure IntegerSchema
       "bytes" -> pure ByteStringSchema
       _ -> PlutusSchema <$> Aeson.parseJSON v
+
+schemaName :: DatumSchema -> String
+schemaName = \case
+  ListSchema _ -> "list"
+  ShapedListSchema _ -> "shaped_list"
+  ConstrSchema _ _ -> "constr"
+  OneOfSchema _ -> "oneOf"
+  MapSchema _ _ -> "map"
+  IntegerSchema -> "integer"
+  ByteStringSchema -> "bytes"
+  PlutusSchema ps -> plutusTypeSchemaName ps
 
 data EffectSchema = EffectSchema
   { meta :: Metadata
