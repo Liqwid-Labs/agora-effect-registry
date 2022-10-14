@@ -2,6 +2,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{- |
+Module     : AgoraRegistry.Schema
+Maintainer : michal@mlabs.city
+Description: Type definitions for effect datum schema
+
+Contains types and instances necessary for decoding
+an Effect metadata schema from JSON.
+-}
 module AgoraRegistry.Schema (
   EffectSchema (..),
   Schema,
@@ -23,48 +31,82 @@ import Optics.TH (makeFieldLabelsNoPrefix)
 
 import AgoraRegistry.Parsing (parseHex')
 
+{- | Provides additional description for schemas.
+
+     @since 0.1.0
+-}
 data Metadata = Metadata
   { name :: Text
+  -- ^ A name for given effect datum part.
   , description :: Text
+  -- ^ A description of an effect datum part.
   }
-  deriving stock (Show, Generic)
+  deriving stock
+    ( -- | @since 0.1.0
+      Show
+    , -- | @since 0.1.0
+      Generic
+    )
 
+-- | @since 0.1.0
 makeFieldLabelsNoPrefix ''Metadata
 
+-- | @since 0.1.0
 instance Aeson.FromJSON Metadata
 
+{- | An auxilliary type aggregating a schema and its metadata.
+
+     @since 0.1.0
+-}
 data Schema' a = Schema
   { meta :: Maybe Metadata
+  -- ^ An optional description of a schema piece.
   , schema :: a
+  -- ^ The actual schema.
   }
-  deriving stock (Show)
+  deriving stock
+    ( -- | @since 0.1.0
+      Show
+    )
 
+-- | @since 0.1.0
 makeFieldLabelsNoPrefix ''Schema'
 
+-- | @since 0.1.0
 instance Aeson.FromJSON a => Aeson.FromJSON (Schema' a) where
   parseJSON v = flip (Aeson.withObject "Schema") v $ \o -> do
     meta <- o .:? "meta"
     schema <- Aeson.parseJSON v
     pure $ Schema meta schema
 
+{- | An enumeration of schema-supported plutus types.
+
+     @since 0.1.0
+-}
 data PlutusTypeSchema
   = AddressSchema
   | ValueSchema
   | CredentialSchema
-  | AssetClassSchema
   | Hash32Schema
   | Hash28Schema
-  deriving stock (Show)
+  deriving stock
+    ( -- | @since 0.1.0
+      Show
+    )
 
+{- | Returns a name for given plutus type schema.
+
+     @since 0.1.0
+-}
 plutusTypeSchemaName :: PlutusTypeSchema -> String
 plutusTypeSchemaName = \case
   AddressSchema -> "plutus/Address"
   ValueSchema -> "plutus/Value"
   CredentialSchema -> "plutus/Credential"
-  AssetClassSchema -> "plutus/AssetClass"
   Hash32Schema -> "plutus/Hash32"
   Hash28Schema -> "plutus/Hash28"
 
+-- | @since 0.1.0
 instance Aeson.FromJSON PlutusTypeSchema where
   parseJSON v = flip (Aeson.withObject "PlutusTypeSchema") v $ \o -> do
     schemaType :: Text <- o .: "type"
@@ -73,26 +115,42 @@ instance Aeson.FromJSON PlutusTypeSchema where
         "plutus/Address" -> Just AddressSchema
         "plutus/Value" -> Just ValueSchema
         "plutus/Credential" -> Just CredentialSchema
-        "plutus/AssetClass" -> Just AssetClassSchema
         "plutus/Hash32" -> Just Hash32Schema
         "plutus/Hash28" -> Just Hash28Schema
         _ -> Nothing
 
+{- | An enumeration of schema-supported types which can encode an effect datum.
+
+     NOTE: must be able to encode any value of type `Plutus.V2.Ledger.Api.Data`
+
+     @since 0.1.0
+-}
 data DatumSchema
-  = ListSchema Schema
-  | ShapedListSchema (NonEmpty Schema)
-  | ConstrSchema Integer (NonEmpty Schema)
-  | OneOfSchema (NonEmpty Schema)
-  | MapSchema Schema Schema
-  | IntegerSchema
-  | ByteStringSchema
-  | PlutusSchema PlutusTypeSchema
+  = -- | Homogeneous list. Encodes Data's List ctor.
+    ListSchema Schema
+  | -- | Heterogenous list. Encodes Data's List ctor.
+    ShapedListSchema (NonEmpty Schema)
+  | -- | Constructor for records.
+    ConstrSchema Integer (NonEmpty Schema)
+  | -- | Will accept anything that adheres to any schema from a given set.
+    OneOfSchema (NonEmpty Schema)
+  | -- | Encodes Data's Map ctor.
+    MapSchema Schema Schema
+  | -- | Encodes Data's I ctor.
+    IntegerSchema
+  | -- | Encodes Data's B ctor.
+    ByteStringSchema
+  | -- | Encodes supported 'higher-level' plutus types.
+    PlutusSchema PlutusTypeSchema
   deriving stock (Show)
 
+-- | Helper type alias.
 type Schema = Schema' DatumSchema
 
+-- | @since 0.1.0
 makeFieldLabelsNoPrefix ''DatumSchema
 
+-- | @since 0.1.0
 instance Aeson.FromJSON DatumSchema where
   parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
     schemaType :: Text <- o .: "type"
@@ -106,6 +164,10 @@ instance Aeson.FromJSON DatumSchema where
       "bytes" -> pure ByteStringSchema
       _ -> PlutusSchema <$> Aeson.parseJSON v
 
+{- | Returns a name for given datum schema.
+
+    @since 0.1.0
+-}
 schemaName :: DatumSchema -> String
 schemaName = \case
   ListSchema _ -> "list"
@@ -117,15 +179,27 @@ schemaName = \case
   ByteStringSchema -> "bytes"
   PlutusSchema ps -> plutusTypeSchemaName ps
 
+{- | Data type that holds the effect datum schema.
+
+     @since 0.1.0
+-}
 data EffectSchema = EffectSchema
   { metadata :: Metadata
+  -- ^ Description of the effect.
   , scriptHash :: ByteString
+  -- ^ Hash of the effect validator script.
   , datumSchema :: Schema
+  -- ^ Schema which all valid datums must abide.
   }
-  deriving stock (Show)
+  deriving stock
+    ( -- | @since 0.1.0
+      Show
+    )
 
+-- | @since 0.1.0
 makeFieldLabelsNoPrefix ''EffectSchema
 
+-- | @since 0.1.0
 instance Aeson.FromJSON EffectSchema where
   parseJSON = Aeson.withObject "EffectSchema" $ \o -> do
     meta <- o .: "meta"
