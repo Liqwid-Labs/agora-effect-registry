@@ -49,19 +49,25 @@ type API =
          )
 
 instance Aeson.ToJSON EffectDatum where
-  toJSON (EffectDatum ed) = Aeson.object ["cborDatum" .= encodeBase16 (serialise ed)]
+  toJSON (EffectDatum ed) =
+    Aeson.object ["cborDatum" .= encodeBase16 (serialise ed)]
 
 newtype EffectScriptHash = EffectScriptHash ByteString
   deriving stock (Eq)
 
 instance FromHttpApiData EffectScriptHash where
-  parseUrlPiece t = EffectScriptHash <$> mapLeft (const "Invalid effect script hash.") (parseEither (parseHex' 28) t)
+  parseUrlPiece t =
+    EffectScriptHash
+      <$> mapLeft (const "Invalid effect script hash.") (parseEither (parseHex' 28) t)
 
 newtype EffectRegistry = EffectRegistry (Map ByteString EffectSchema)
 
 newtype EffectDatum = EffectDatum Plutus.Data
 
-lookupEffectByScriptHash :: EffectScriptHash -> EffectRegistry -> Maybe EffectSchema
+lookupEffectByScriptHash ::
+  EffectScriptHash ->
+  EffectRegistry ->
+  Maybe EffectSchema
 lookupEffectByScriptHash (EffectScriptHash k) (EffectRegistry m) = Map.lookup k m
 
 newtype AppM a = AppM (EffectRegistry -> Handler a)
@@ -71,18 +77,29 @@ runApp r (AppM fh) = fh r
 
 askEffect :: EffectScriptHash -> AppM EffectSchema
 askEffect hash = AppM $ \r -> case lookupEffectByScriptHash hash r of
-  Nothing -> throwError $ err404 {errBody = "Effect with given script is not registered."}
+  Nothing ->
+    throwError $
+      err404 {errBody = "Effect with given script is not registered."}
   Just eff -> pure eff
 
 encodeDatum :: EffectScriptHash -> Aeson.Value -> AppM EffectDatum
-encodeDatum hash jsonDatum = AppM $ \r -> case lookupEffectByScriptHash hash r of
-  Nothing -> throwError $ err404 {errBody = "Effect with given script is not registered."}
-  Just _ -> do
-    effSchema <- runApp r $ askEffect hash
-    let dataE = validateEffectDatum effSchema jsonDatum
-    case dataE of
-      Left x -> throwError $ err400 {errBody = "Provided datum failed to encode against the effect schema. " <> fromString x}
-      Right d -> pure $ EffectDatum d
+encodeDatum hash jsonDatum = AppM $
+  \r -> case lookupEffectByScriptHash hash r of
+    Nothing ->
+      throwError $
+        err404 {errBody = "Effect with given script is not registered."}
+    Just _ -> do
+      effSchema <- runApp r $ askEffect hash
+      let dataE = validateEffectDatum effSchema jsonDatum
+      case dataE of
+        Left x ->
+          throwError $
+            err400
+              { errBody =
+                  "Provided datum failed to encode against the effect schema. "
+                    <> fromString x
+              }
+        Right d -> pure $ EffectDatum d
 
 api :: Data.Proxy.Proxy API
 api = Data.Proxy.Proxy
@@ -105,7 +122,9 @@ loadEffects = do
           ]
     Right effs -> pure $ EffectRegistry $ Map.fromList effs
 
-loadEffect :: FilePath -> IO (Either (FilePath, String) (ByteString, EffectSchema))
+loadEffect ::
+  FilePath ->
+  IO (Either (FilePath, String) (ByteString, EffectSchema))
 loadEffect fp =
   Aeson.eitherDecodeFileStrict' fp
     <&> bimap
