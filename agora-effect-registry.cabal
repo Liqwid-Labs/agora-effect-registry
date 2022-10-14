@@ -93,7 +93,6 @@ library
   import:          lang, deps
   hs-source-dirs:  agora-effect-registry
   exposed-modules:
-    AgoraRegistry
     AgoraRegistry.DatumValidation
     AgoraRegistry.Parsing
     AgoraRegistry.Schema
