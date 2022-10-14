@@ -1,26 +1,51 @@
 module AgoraRegistry.DatumValidation (
   validateEffectDatum,
+  validateEffectDatum',
   validateJsonDatum,
 ) where
 
-import AgoraRegistry.Parsing (parseGuard, parseHash, parseHex)
-import AgoraRegistry.Schema (DatumSchema (ByteStringSchema, ConstrSchema, IntegerSchema, ListSchema, MapSchema, OneOfSchema, PlutusSchema, ShapedListSchema), EffectSchema, PlutusTypeSchema (AddressSchema, CredentialSchema, Hash28Schema, Hash32Schema, ValueSchema), schemaName)
+import AgoraRegistry.Parsing (
+  parseGuard,
+  parseHash,
+  parseHex,
+ )
+import AgoraRegistry.Schema (
+  DatumSchema (
+    ByteStringSchema,
+    ConstrSchema,
+    IntegerSchema,
+    ListSchema,
+    MapSchema,
+    OneOfSchema,
+    PlutusSchema,
+    ShapedListSchema
+  ),
+  EffectSchema,
+  PlutusTypeSchema (
+    AddressSchema,
+    CredentialSchema,
+    Hash28Schema,
+    Hash32Schema,
+    ValueSchema
+  ),
+  schemaName,
+ )
 import Control.Applicative ((<|>))
 import Control.Monad (when, zipWithM)
 import Data.Aeson (withObject, (.:))
-import Data.Aeson qualified as Aeson
+import qualified Data.Aeson as Aeson
 import Data.Aeson.Types (parseEither)
-import Data.Aeson.Types qualified as Aeson
+import qualified Data.Aeson.Types as Aeson
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.ByteString (ByteString)
 import Data.Function ((&))
 import Data.List.Extra (groupSortBy)
 import Data.List.NonEmpty (NonEmpty ((:|)))
-import Data.List.NonEmpty qualified as NE
+import qualified Data.List.NonEmpty as NE
 import Data.Ord (comparing)
-import Data.Text qualified as T
+import qualified Data.Text as T
 import Optics.Core (view, (%))
-import PlutusLedgerApi.V2 qualified as Plutus
+import qualified PlutusLedgerApi.V2 as Plutus
 
 validateEffectDatum :: EffectSchema -> Aeson.Value -> Either String Plutus.Data
 validateEffectDatum es = parseEither (validateEffectDatum' es)
@@ -96,7 +121,7 @@ addFailMessage modMessage parse v = Aeson.modifyFailure modMessage (parse v)
 
 parseValue :: Aeson.Value -> Aeson.Parser Plutus.Value
 parseValue = addFailMessage ("Parsing value: " ++) $ \v -> flip (Aeson.withObject "plutus/value") v $ \o -> do
-  values :: [_] <- traverse parseFlatten =<< o .: "value"
+  values <- traverse parseFlatten =<< o .: "value"
   valueMap <- either fail pure (buildValueMap values)
   pure $ Plutus.Value valueMap
   where

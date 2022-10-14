@@ -1,4 +1,6 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module AgoraRegistry.Schema (
   EffectSchema (..),
@@ -7,18 +9,19 @@ module AgoraRegistry.Schema (
   DatumSchema (..),
   Metadata (..),
   PlutusTypeSchema (..),
+  plutusTypeSchemaName,
   schemaName,
 ) where
 
 import Data.Aeson ((.:), (.:?))
-import Data.Aeson qualified as Aeson
+import qualified Data.Aeson as Aeson
 import Data.ByteString (ByteString)
+import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Optics.TH (makeFieldLabelsNoPrefix)
 
 import AgoraRegistry.Parsing (parseHex')
-import Data.List.NonEmpty (NonEmpty)
 
 data Metadata = Metadata
   { name :: Text
@@ -27,6 +30,7 @@ data Metadata = Metadata
   deriving stock (Show, Generic)
 
 makeFieldLabelsNoPrefix ''Metadata
+
 instance Aeson.FromJSON Metadata
 
 data Schema' a = Schema
@@ -114,7 +118,7 @@ schemaName = \case
   PlutusSchema ps -> plutusTypeSchemaName ps
 
 data EffectSchema = EffectSchema
-  { meta :: Metadata
+  { metadata :: Metadata
   , scriptHash :: ByteString
   , datumSchema :: Schema
   }

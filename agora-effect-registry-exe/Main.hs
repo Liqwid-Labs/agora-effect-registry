@@ -4,7 +4,7 @@ import AgoraRegistry.DatumValidation (validateEffectDatum)
 import AgoraRegistry.Parsing (parseHex')
 import AgoraRegistry.Schema (EffectSchema)
 import Codec.Serialise (serialise)
-import Data.Aeson qualified as Aeson
+import qualified Data.Aeson as Aeson
 import Data.Aeson.Types (parseEither, (.=))
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
@@ -13,11 +13,11 @@ import Data.ByteString.Lazy.UTF8 (fromString)
 import Data.Either.Extra (mapLeft)
 import Data.Functor ((<&>))
 import Data.Map (Map)
-import Data.Map qualified as Map
+import qualified Data.Map as Map
 import Data.Proxy (Proxy (Proxy))
 import Network.Wai.Handler.Warp (run)
 import Optics.Core (view)
-import PlutusLedgerApi.V2 qualified as Plutus
+import qualified PlutusLedgerApi.V2 as Plutus
 import Servant (
   Capture,
   FromHttpApiData (parseUrlPiece),

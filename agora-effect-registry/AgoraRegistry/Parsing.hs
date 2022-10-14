@@ -6,14 +6,14 @@ module AgoraRegistry.Parsing (
 ) where
 
 import Control.Monad (guard)
-import Data.Aeson.Types qualified as Aeson
+import qualified Data.Aeson.Types as Aeson
 import Data.ByteString (ByteString)
-import Data.ByteString.Base16 qualified as Base16 (decodeBase16)
+import qualified Data.ByteString.Base16 as Base16 (decodeBase16)
 import Data.Text (Text)
-import Data.Text qualified as T
-import Data.Text qualified as Text
+import qualified Data.Text as T
+import qualified Data.Text as Text
 import Data.Text.Encoding (encodeUtf8)
-import PlutusLedgerApi.V2 qualified as Plutus
+import qualified PlutusLedgerApi.V2 as Plutus
 
 parseGuard :: String -> Bool -> Aeson.Parser ()
 parseGuard s = Aeson.modifyFailure (const s) . guard
