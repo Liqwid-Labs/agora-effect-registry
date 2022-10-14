@@ -61,13 +61,9 @@ common deps
     , cache
     , cardano-binary
     , cborg
-    , clock
     , containers
-    , data-default
-    , data-default-class
     , extra
     , generics-sop
-    , gitrev
     , hashable
     , http-types
     , optics-core
@@ -75,7 +71,6 @@ common deps
     , optparse-applicative
     , plutus-core
     , plutus-ledger-api
-    , plutus-tx
     , prettyprinter
     , serialise
     , servant
