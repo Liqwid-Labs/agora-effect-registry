@@ -1,3 +1,10 @@
+{- |
+Module     : AgoraRegistry.Parsing
+Maintainer : michal@mlabs.city
+Description: Parsing utilities for basic types.
+
+Parsing utilities for basic types.
+-}
 module AgoraRegistry.Parsing (
   parseHash,
   parseHex,
@@ -15,6 +22,7 @@ import qualified Data.Text as Text
 import Data.Text.Encoding (encodeUtf8)
 import qualified PlutusLedgerApi.V2 as Plutus
 
+-- | Like `Control.Monad.guard`, but accepts an error message.
 parseGuard :: String -> Bool -> Aeson.Parser ()
 parseGuard s = Aeson.modifyFailure (const s) . guard
 
