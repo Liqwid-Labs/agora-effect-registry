@@ -99,3 +99,8 @@ executable agora-effect-registry-exe
   hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
   build-depends:  agora-effect-registry
+  other-modules:
+    Api
+    AppM
+    EffectRegistry
+    Server

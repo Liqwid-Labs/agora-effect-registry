@@ -72,7 +72,6 @@ validateEffectDatum es = parseEither (validateEffectDatum' es)
 validateEffectDatum' :: EffectSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
 validateEffectDatum' es = validateJsonDatum (view (#datumSchema % #schema) es)
 
-
 {- | Provided an effect datum schema and a datum encoded in JSON it validates
      the datum conformance to the schema and returns the datum as
      `PlutusLedgerApi.V2.Data` value in the format of an `Aeson.Parser`
@@ -150,7 +149,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       Plutus.List
         <$> (traverse (validateJsonDatum elementsSchema) =<< o .: "elements")
 
-{- | Validates and encodes one the supported plutus type provided as a JSON. -}
+-- | Validates and encodes one the supported plutus type provided as a JSON.
 parsePlutusType :: PlutusTypeSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
 parsePlutusType s v = flip (Aeson.withObject "PlutusType") v $ \o -> do
   schemaType :: String <- o .: "type"
@@ -172,7 +171,6 @@ parsePlutusType s v = flip (Aeson.withObject "PlutusType") v $ \o -> do
           <> " got: "
           <> schemaType
 
-
 {- | Dedicated JSON Parser for Plutus' Credential type.
      Example:
     ```json
@@ -192,7 +190,6 @@ parseCredential = addFailMessage ("Parsing credential: " ++) $
         (fmap (Plutus.PubKeyCredential . Plutus.PubKeyHash) . parseHash 28)
         (fmap (Plutus.ScriptCredential . Plutus.ValidatorHash) . parseHash 28)
 
-
 {- | Dedicated JSON Parser for Plutus' Address type.
 
      NOTE: Currently staking credentials are not supported.
@@ -209,7 +206,6 @@ parseAddress :: Aeson.Value -> Aeson.Parser Plutus.Address
 parseAddress =
   addFailMessage ("Parsing address: " ++) $
     fmap (`Plutus.Address` Nothing) . parseCredential
-
 
 {- | Dedicated JSON Parser for Plutus' Value type.
      An example json form that will be accepted:
@@ -270,12 +266,10 @@ parseValue = addFailMessage ("Parsing value: " ++) $
       amount <- o .: "amount"
       pure (cs, tn, amount)
 
-
-{- | Helper function to conveniently modify the error message of a parser. -}
+-- | Helper function to conveniently modify the error message of a parser.
 addFailMessage ::
   (String -> String) ->
   (Aeson.Value -> Aeson.Parser a) ->
   Aeson.Value ->
   Aeson.Parser a
 addFailMessage modMessage parse v = Aeson.modifyFailure modMessage (parse v)
-
