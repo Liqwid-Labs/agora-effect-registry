@@ -455,11 +455,11 @@
         "nixpkgs-2205": "nixpkgs-2205"
       },
       "locked": {
-        "lastModified": 1660580223,
-        "narHash": "sha256-r1i92rrUjSBdnQZpHLxeCAtVGMHYqKQHm05mzddIte8=",
+        "lastModified": 1665587728,
+        "narHash": "sha256-Cz2594dfFxEGB3gCuXlQPGYtiQA7QTviBaUktoYrq9I=",
         "owner": "Liqwid-Labs",
         "repo": "liqwid-nix",
-        "rev": "fa1eeba35b37ac2551a00798dffdf053879699c3",
+        "rev": "c17fef5826ae9e329818018a09302c69fee9a83c",
         "type": "github"
       },
       "original": {

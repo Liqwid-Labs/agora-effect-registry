@@ -19,8 +19,8 @@ import qualified Data.Map as Map
 import AgoraRegistry.DatumValidation (validateEffectDatum)
 import AgoraRegistry.Schema (EffectSchema)
 import AgoraRegistry.Server.Api (EffectDatum (EffectDatum), EffectScriptHash (EffectScriptHash))
-import Data.ByteString.Lazy.UTF8 (fromString)
 import AgoraRegistry.Server.EffectRegistry (EffectRegistry (EffectRegistry))
+import Data.ByteString.Lazy.UTF8 (fromString)
 import Servant (Handler, ServerError (errBody), err400, err404, throwError)
 
 -- | A wrapper over a server request handler providing state.

@@ -5,7 +5,6 @@ Description: Provides server starting functions.
 
 Provides server starting functions.
 -}
-
 module AgoraRegistry.Server.Server (
   server,
   app,

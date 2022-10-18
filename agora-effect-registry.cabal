@@ -115,4 +115,7 @@ test-suite agora-effect-registry-test
   build-depends:
     , agora-effect-registry
     , agora-effect-registry-server
+    , filepath
     , hspec
+
+  other-modules:  FixtureTests
