@@ -235,10 +235,12 @@ parseValue = addFailMessage ("Parsing value: " ++) $
       Either
         String
         (Plutus.Map Plutus.CurrencySymbol (Plutus.Map Plutus.TokenName Integer))
-    buildValueMap xs = do
-      let csGroups = groupSortBy (comparing (\(cs, _, _) -> cs)) xs
-      values <- traverse buildInnerMap csGroups
-      pure $ Plutus.fromList values
+    buildValueMap = \case
+      [] -> pure $ Plutus.fromList []
+      xs -> do
+        let csGroups = groupSortBy (comparing (\(cs, _, _) -> cs)) xs
+        values <- traverse buildInnerMap csGroups
+        pure $ Plutus.fromList values
 
     -- assuming items grouped by currency symbol, non empty groups
     buildInnerMap ::

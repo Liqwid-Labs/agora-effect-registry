@@ -1,0 +1,14 @@
+{
+    "type": "constr",
+    "tag": 2,
+    "fields": [
+        {
+        "type": "bytes",
+        "value": "ff"
+        },
+        {
+            "type": "integer",
+            "value": 1
+        }
+    ]
+}

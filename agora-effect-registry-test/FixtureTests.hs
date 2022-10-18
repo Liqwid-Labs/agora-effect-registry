@@ -4,6 +4,7 @@
 
 module FixtureTests (runFixtureTests) where
 
+import Control.Arrow (first)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Types as Aeson
 import Data.Bifunctor (bimap)
@@ -17,7 +18,7 @@ import Optics.Core (view)
 import Optics.TH (makeFieldLabelsNoPrefix)
 import System.Directory.Extra (listDirectory)
 import System.FilePath (takeBaseName, (</>))
-import Test.Hspec (Spec, describe, it, runIO, shouldSatisfy, parallel)
+import Test.Hspec (Spec, describe, it, parallel, runIO, shouldSatisfy)
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)
 
@@ -57,8 +58,8 @@ loadFixtures dir = do
 data FixtureTest = FixtureTest
   { name :: FilePath
   , jsonSchema :: Aeson.Value
-  , validDatums :: [Aeson.Value]
-  , invalidDatums :: [Aeson.Value]
+  , validDatums :: [(FilePath, Aeson.Value)]
+  , invalidDatums :: [(FilePath, Aeson.Value)]
   }
   deriving stock (Show, Generic)
 makeFieldLabelsNoPrefix ''FixtureTest
@@ -70,30 +71,32 @@ prepareFixtureTests = do
   invalid <- loadFixtures invalidDatumFixturesPath
   for schemas $ \(schemaPath, schema) -> do
     let schemaName = takeBaseName schemaPath
-    let validDatums = snd <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) valid
-    let invalidDatums = snd <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) invalid
+    let validDatums =
+          first takeBaseName
+            <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) valid
+    let invalidDatums =
+          first takeBaseName
+            <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) invalid
     pure $ FixtureTest schemaName schema validDatums invalidDatums
 
 runFixtureTest :: FixtureTest -> Spec
 runFixtureTest test =
-  describe (view #name test) $ parallel $ do
-    let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
-    it "Should decode the EffectSchema from JSON" $ do
-      schema' `shouldSatisfy` isRight
-    let effectSchema = fromRight undefined schema'
-    for_ (enumerate (view #validDatums test)) $ \(i, datum) ->
-      it ("Should parse and succesfully encode as Plutus data #" <> show i) $ do
-        let result = validateEffectDatum effectSchema datum
-        result `shouldSatisfy` isRight
-    for_ (enumerate (view #invalidDatums test)) $ \(i, datum) ->
-      it ("Should parse and fail to encode as Plutus data #" <> show i) $ do
-        let result = validateEffectDatum effectSchema datum
-        result `shouldSatisfy` isLeft
+  describe (view #name test) $
+    parallel $ do
+      let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
+      it "Should decode the EffectSchema from JSON" $ do
+        schema' `shouldSatisfy` isRight
+      let effectSchema = fromRight undefined schema'
+      for_ (view #validDatums test) $ \(n, datum) ->
+        it ("Should parse and succesfully encode as Plutus data - " <> show n) $ do
+          let result = validateEffectDatum effectSchema datum
+          result `shouldSatisfy` isRight
+      for_ (view #invalidDatums test) $ \(n, datum) ->
+        it ("Should parse and fail to encode as Plutus data - " <> show n) $ do
+          let result = validateEffectDatum effectSchema datum
+          result `shouldSatisfy` isLeft
 
 runFixtureTests :: Spec
 runFixtureTests =
   describe "Schema FromJSON and datum encoding fixture tests" $
     runIO prepareFixtureTests >>= traverse_ runFixtureTest
-
-enumerate :: [a] -> [(Int, a)]
-enumerate = zip [1 ..]
