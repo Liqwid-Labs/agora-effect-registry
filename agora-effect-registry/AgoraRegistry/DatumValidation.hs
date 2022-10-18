@@ -45,6 +45,8 @@ import Data.Aeson.Types (parseEither)
 import qualified Data.Aeson.Types as Aeson
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
+import Data.ByteString.UTF8 (fromString)
 import Data.Function ((&))
 import Data.List.Extra (groupSortBy)
 import Data.List.NonEmpty (NonEmpty ((:|)))
@@ -262,7 +264,10 @@ parseValue = addFailMessage ("Parsing value: " ++) $
           <$> if T.null csStr
             then pure (Plutus.toBuiltin ("" :: ByteString))
             else parseHash 28 csStr
-      tn <- Plutus.TokenName . Plutus.toBuiltin <$> (parseHex =<< o .: "tokenName")
+      tn' <- fromString <$> (o .: "tokenName")
+      let tn = Plutus.TokenName . Plutus.toBuiltin $ tn'
+      when (T.null csStr && not (B.null tn')) $
+        fail "Currency symbol must be present when token name is present"
       amount <- o .: "amount"
       pure (cs, tn, amount)
 

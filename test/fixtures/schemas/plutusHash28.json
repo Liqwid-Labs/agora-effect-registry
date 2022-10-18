@@ -5,6 +5,6 @@
     },
     "scriptHash": "aabbccddeeff11223344556677889900aabbccddeeff112233445566",
     "datumSchema": {
-        "type": "integer"
+        "type": "plutus/Hash28"
     }
 }

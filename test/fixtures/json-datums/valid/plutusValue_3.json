@@ -1,0 +1,20 @@
+{
+  "type": "plutus/Value",
+  "value": [
+    {
+      "currencySymbol": "71c64e97b826cf2303d227ef4cced53c1169dfff1a405533c24d70d8",
+      "tokenName": "mytokenname",
+      "amount": 10
+    },
+    {
+      "currencySymbol": "71c64e97b826cf2303d227ef4cced53c1169dfff1a405533c24d70d8",
+      "tokenName": "mytokenname2",
+      "amount": 10
+    },
+    {
+        "currencySymbol": "",
+        "tokenName": "",
+        "amount": 10
+    }
+  ]
+}
