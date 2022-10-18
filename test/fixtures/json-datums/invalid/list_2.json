@@ -1,0 +1,13 @@
+{
+    "type": "list",
+    "elements": [
+        {
+            "type": "integer",
+            "value": 123
+        },
+        {
+            "type": "bytes",
+            "value": "1234"
+        }
+    ]
+}

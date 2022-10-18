@@ -1,0 +1,4 @@
+{
+    "type": "list",
+    "elements": [{"type": "bytes", "value": "1234"}]
+}

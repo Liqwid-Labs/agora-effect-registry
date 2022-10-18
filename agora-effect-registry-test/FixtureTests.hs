@@ -17,7 +17,7 @@ import Optics.Core (view)
 import Optics.TH (makeFieldLabelsNoPrefix)
 import System.Directory.Extra (listDirectory)
 import System.FilePath (takeBaseName, (</>))
-import Test.Hspec (Spec, describe, it, runIO, shouldSatisfy)
+import Test.Hspec (Spec, describe, it, runIO, shouldSatisfy, parallel)
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)
 
@@ -76,7 +76,7 @@ prepareFixtureTests = do
 
 runFixtureTest :: FixtureTest -> Spec
 runFixtureTest test =
-  describe (view #name test) $ do
+  describe (view #name test) $ parallel $ do
     let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
     it "Should decode the EffectSchema from JSON" $ do
       schema' `shouldSatisfy` isRight
