@@ -1,11 +1,11 @@
 {- |
-Module     : Api
+Module     : AgoraRegistry.Server.EffectRegistry
 Maintainer : michal@mlabs.city
 Description: Defines EffectRegistry types and functions.
 
 Defines EffectRegistry types and functions.
 -}
-module EffectRegistry (
+module AgoraRegistry.Server.EffectRegistry (
   EffectRegistry (EffectRegistry),
   loadEffects,
   loadEffect,

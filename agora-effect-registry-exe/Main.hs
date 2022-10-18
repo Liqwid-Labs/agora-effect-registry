@@ -1,8 +1,8 @@
 module Main (main) where
 
-import EffectRegistry (loadEffects)
+import AgoraRegistry.Server.EffectRegistry (loadEffects)
+import AgoraRegistry.Server.Server (app)
 import Network.Wai.Handler.Warp (run)
-import Server (app)
 
 -- | Paths from which the server loads effect schemas.
 effectsDir :: FilePath

@@ -1,11 +1,11 @@
 {- |
-Module     : Api
+Module     : AgoraRegistry.Server.Api
 Maintainer : michal@mlabs.city
 Description: Provides API definition.
 
 Provides API definition.
 -}
-module Api (
+module AgoraRegistry.Server.Api (
   EffectDatum (EffectDatum),
   EffectScriptHash (EffectScriptHash),
   API,

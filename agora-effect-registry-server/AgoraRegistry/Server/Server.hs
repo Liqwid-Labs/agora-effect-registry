@@ -1,19 +1,16 @@
 {- |
-Module     : Server
+Module     : AgoraRegistry.Server.Server
 Maintainer : michal@mlabs.city
 Description: Provides server starting functions.
 
 Provides server starting functions.
 -}
 
-module Server (
+module AgoraRegistry.Server.Server (
   server,
   app,
 ) where
 
-import Api (API, api)
-import AppM (AppM, encodeDatum, runApp)
-import EffectRegistry (EffectRegistry)
 import Servant (
   HasServer (ServerT),
   hoistServer,
@@ -21,6 +18,10 @@ import Servant (
   type (:<|>) ((:<|>)),
  )
 import Servant.Server (Application, serve)
+
+import AgoraRegistry.Server.Api (API, api)
+import AgoraRegistry.Server.AppM (AppM, encodeDatum, runApp)
+import AgoraRegistry.Server.EffectRegistry (EffectRegistry)
 
 server :: FilePath -> ServerT API AppM
 server effectsDir =

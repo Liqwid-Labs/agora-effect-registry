@@ -53,36 +53,31 @@ common lang
 common deps
   build-depends:
     , aeson
-    , ansi-terminal
-    , base                  >=4.14 && <5
+    , base               >=4.14 && <5
     , base-compat
     , base16
     , bytestring
-    , cache
-    , cardano-binary
-    , cborg
     , containers
     , extra
-    , generics-sop
-    , hashable
-    , http-types
     , optics-core
     , optics-th
-    , optparse-applicative
     , plutus-core
     , plutus-ledger-api
-    , prettyprinter
-    , serialise
-    , servant
-    , servant-server
     , template-haskell
     , text
     , utf8-string
+
+common server-deps
+  build-depends:
+    , cache
+    , cardano-binary
+    , cborg
+    , http-types
+    , serialise
+    , servant
+    , servant-server
     , wai
     , wai-cors
-    , warp
-
-  mixins:
 
 library
   import:          lang, deps
@@ -92,15 +87,32 @@ library
     AgoraRegistry.Parsing
     AgoraRegistry.Schema
 
-  other-modules:
+library agora-effect-registry-server
+  import:          lang, deps, server-deps
+  hs-source-dirs:  agora-effect-registry-server
+  exposed-modules:
+    AgoraRegistry.Server.Api
+    AgoraRegistry.Server.AppM
+    AgoraRegistry.Server.EffectRegistry
+    AgoraRegistry.Server.Server
+
+  build-depends:   agora-effect-registry
 
 executable agora-effect-registry-exe
   import:         lang, deps
   hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
-  build-depends:  agora-effect-registry
-  other-modules:
-    Api
-    AppM
-    EffectRegistry
-    Server
+  build-depends:
+    , agora-effect-registry
+    , agora-effect-registry-server
+    , warp
+
+test-suite agora-effect-registry-test
+  import:         lang, deps
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  hs-source-dirs: agora-effect-registry-test
+  build-depends:
+    , agora-effect-registry
+    , agora-effect-registry-server
+    , hspec

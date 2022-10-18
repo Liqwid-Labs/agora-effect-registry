@@ -1,11 +1,11 @@
 {- |
-Module     : AppM
+Module     : AgoraRegistry.Server.AppM
 Maintainer : michal@mlabs.city
 Description: Provides API implementation.
 
 Provides API implementation.
 -}
-module AppM (
+module AgoraRegistry.Server.AppM (
   AppM (..),
   lookupEffectByScriptHash,
   runApp,
@@ -18,9 +18,9 @@ import qualified Data.Map as Map
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)
 import AgoraRegistry.Schema (EffectSchema)
-import Api (EffectDatum (EffectDatum), EffectScriptHash (EffectScriptHash))
+import AgoraRegistry.Server.Api (EffectDatum (EffectDatum), EffectScriptHash (EffectScriptHash))
 import Data.ByteString.Lazy.UTF8 (fromString)
-import EffectRegistry (EffectRegistry (EffectRegistry))
+import AgoraRegistry.Server.EffectRegistry (EffectRegistry (EffectRegistry))
 import Servant (Handler, ServerError (errBody), err400, err404, throwError)
 
 -- | A wrapper over a server request handler providing state.
