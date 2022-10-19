@@ -17,7 +17,6 @@ import qualified Data.Aeson.Types as Aeson
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16 (decodeBase16)
 import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.Text as Text
 import Data.Text.Encoding (encodeUtf8)
 import qualified PlutusLedgerApi.V2 as Plutus
@@ -42,7 +41,7 @@ parseHex' l s = do
         <> " got: "
         <> show s
     )
-    $ T.length s == (2 * l)
+    $ Text.length s == (2 * l)
   parseHex s
 
 -- | Decode hex and utf8 encoded hashes of particular size (in bytes)

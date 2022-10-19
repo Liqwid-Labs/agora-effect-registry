@@ -117,5 +117,12 @@ test-suite agora-effect-registry-test
     , agora-effect-registry-server
     , filepath
     , hspec
+    , hspec-wai
+    , http-types
+    , servant-client
+    , servant-server
+    , warp
 
-  other-modules:  FixtureTests
+  other-modules:
+    ApiTests
+    FixtureTests

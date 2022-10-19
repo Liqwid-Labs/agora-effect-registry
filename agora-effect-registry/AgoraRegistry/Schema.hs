@@ -43,6 +43,8 @@ data Metadata = Metadata
   }
   deriving stock
     ( -- | @since 0.1.0
+      Eq
+    , -- | @since 0.1.0
       Show
     , -- | @since 0.1.0
       Generic
@@ -66,6 +68,8 @@ data Schema' a = Schema
   }
   deriving stock
     ( -- | @since 0.1.0
+      Eq
+    , -- | @since 0.1.0
       Show
     )
 
@@ -91,6 +95,8 @@ data PlutusTypeSchema
   | Hash28Schema
   deriving stock
     ( -- | @since 0.1.0
+      Eq
+    , -- | @since 0.1.0
       Show
     )
 
@@ -142,7 +148,12 @@ data DatumSchema
     ByteStringSchema
   | -- | Encodes supported 'higher-level' plutus types.
     PlutusSchema PlutusTypeSchema
-  deriving stock (Show)
+  deriving stock
+    ( -- | @since 0.1.0
+      Eq
+    , -- | @since 0.1.0
+      Show
+    )
 
 -- | Helper type alias.
 type Schema = Schema' DatumSchema
@@ -193,6 +204,8 @@ data EffectSchema = EffectSchema
   }
   deriving stock
     ( -- | @since 0.1.0
+      Eq
+    , -- | @since 0.1.0
       Show
     )
 
