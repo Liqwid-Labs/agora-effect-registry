@@ -156,7 +156,7 @@ instance Aeson.FromJSON DatumSchema where
     schemaType :: Text <- o .: "type"
     case schemaType of
       "list" -> ListSchema <$> o .: "elements"
-      "shaped_list" -> ShapedListSchema <$> o .: "elements"
+      "shapedList" -> ShapedListSchema <$> o .: "elements"
       "constr" -> ConstrSchema <$> o .: "tag" <*> o .: "fields"
       "oneOf" -> OneOfSchema <$> o .: "options"
       "map" -> MapSchema <$> o .: "keys" <*> o .: "values"
@@ -171,7 +171,7 @@ instance Aeson.FromJSON DatumSchema where
 schemaName :: DatumSchema -> String
 schemaName = \case
   ListSchema _ -> "list"
-  ShapedListSchema _ -> "shaped_list"
+  ShapedListSchema _ -> "shapedList"
   ConstrSchema _ _ -> "constr"
   OneOfSchema _ -> "oneOf"
   MapSchema _ _ -> "map"

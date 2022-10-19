@@ -1,0 +1,17 @@
+{
+  "type": "shapedList",
+  "elements": [
+    {
+      "type": "integer",
+      "value": 1
+    },
+    {
+      "type": "bytes",
+      "value": "9900ff"
+    },
+    {
+      "type": "bytes",
+      "value": "9900ff"
+    }
+  ]
+}

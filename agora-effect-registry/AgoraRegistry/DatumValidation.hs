@@ -89,7 +89,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
         nonEmptyMsum $
           flip validateJsonDatum v . view #schema <$> ss
       (ListSchema s, "list") -> parseList (view #schema s) o
-      (ShapedListSchema ss, "shaped_list") ->
+      (ShapedListSchema ss, "shapedList") ->
         parseShapedList (view #schema <$> ss) o
       (ConstrSchema tag ss, "constr") ->
         parseConstr tag (view #schema <$> ss) o
@@ -143,8 +143,11 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseShapedList ss o =
-      Plutus.List
-        <$> (zipWithM validateJsonDatum (NE.toList ss) =<< (o .: "elements"))
+      Plutus.List <$> do
+        values <- o .: "elements"
+        let schemas = NE.toList ss
+        parseGuard "Shaped list length mismatch." (length values == length schemas)
+        zipWithM validateJsonDatum schemas values
 
     parseList :: DatumSchema -> Aeson.Object -> Aeson.Parser Plutus.Data
     parseList elementsSchema o =

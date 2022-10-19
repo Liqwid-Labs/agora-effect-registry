@@ -83,14 +83,18 @@ runFixtureTest :: FixtureTest -> Spec
 runFixtureTest test =
   describe (view #name test) $
     parallel $ do
+      -- schema FromJSON tests
       let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
       it "Should decode the EffectSchema from JSON" $ do
         schema' `shouldSatisfy` isRight
+      -- NOTE: safe here
       let effectSchema = fromRight undefined schema'
+      -- valid datum tests
       for_ (view #validDatums test) $ \(n, datum) ->
         it ("Should parse and succesfully encode as Plutus data - " <> show n) $ do
           let result = validateEffectDatum effectSchema datum
           result `shouldSatisfy` isRight
+      -- invalid datum tests
       for_ (view #invalidDatums test) $ \(n, datum) ->
         it ("Should parse and fail to encode as Plutus data - " <> show n) $ do
           let result = validateEffectDatum effectSchema datum
