@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module FixtureTests (runFixtureTests) where
+module FixtureTests (runFixtureTests, schemaFixturesPath, FixtureTest, prepareFixtureTests) where
 
 import Control.Arrow (first)
 import qualified Data.Aeson as Aeson
@@ -56,7 +56,7 @@ loadFixtures dir = do
           (\eff -> (fp, eff))
 
 data FixtureTest = FixtureTest
-  { name :: FilePath
+  { schemaPath :: FilePath
   , jsonSchema :: Aeson.Value
   , validDatums :: [(FilePath, Aeson.Value)]
   , invalidDatums :: [(FilePath, Aeson.Value)]
@@ -77,11 +77,11 @@ prepareFixtureTests = do
     let invalidDatums =
           first takeBaseName
             <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) invalid
-    pure $ FixtureTest schemaName schema validDatums invalidDatums
+    pure $ FixtureTest schemaPath schema validDatums invalidDatums
 
 runFixtureTest :: FixtureTest -> Spec
 runFixtureTest test =
-  describe (view #name test) $
+  describe (takeBaseName $ view #schemaPath test) $
     parallel $ do
       -- schema FromJSON tests
       let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
