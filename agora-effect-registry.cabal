@@ -121,8 +121,8 @@ test-suite agora-effect-registry-test
     , http-types
     , servant-client
     , servant-server
-    , warp
     , wai-extra
+    , warp
 
   other-modules:
     ApiTests

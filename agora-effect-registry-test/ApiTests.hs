@@ -3,20 +3,25 @@ module ApiTests (runApiTests) where
 import Test.Hspec (Spec, describe, it, runIO)
 
 import AgoraRegistry.Schema (EffectSchema)
+import AgoraRegistry.Server.Api (EffectScriptHash (EffectScriptHash))
 import AgoraRegistry.Server.EffectRegistry (loadEffects)
 import AgoraRegistry.Server.Server (app)
 import Control.Monad (forM_)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
-import Data.ByteString.UTF8 (fromString, ByteString)
+import Data.ByteString.UTF8 (ByteString, fromString)
+import Data.Foldable (for_)
+import Data.Kind (Type)
+import Data.Text.Encoding (encodeUtf8)
+import qualified FixtureTests
+import Network.HTTP.Types (hContentType, methodPost)
 import Network.HTTP.Types.Header (Header)
+import Network.Wai.Test (SResponse)
+import Optics.Core (view)
+import Servant (ToHttpApiData (toUrlPiece))
 import System.Directory.Extra (listDirectory)
 import System.FilePath ((</>))
-import Test.Hspec.Wai (Body, MatchBody (MatchBody), ResponseMatcher (matchBody), get, post, shouldRespondWith, with, request, WaiSession)
-import Optics.Core (view)
-import Network.HTTP.Types (methodPost, hContentType)
-import Data.Kind (Type)
-import Network.Wai.Test (SResponse)
+import Test.Hspec.Wai (Body, MatchBody (MatchBody), ResponseMatcher (matchBody), WaiSession, get, post, request, shouldRespondWith, with)
 
 effectsDir :: FilePath
 effectsDir = "./effects"
@@ -27,15 +32,32 @@ runApiTests = do
   with (pure $ app effectsDir registry) $ do
     getEffectTests
     encodeEffectDatumErrorTests
+  encodeEffectFixtureSchemaTests
   where
-    existingSchemaScriptHash :: IO ByteString
-    existingSchemaScriptHash = do
-      effFiles <- listDirectory effectsDir
-      Right (effSchema :: EffectSchema) <- Aeson.eitherDecodeFileStrict' (effectsDir </> head effFiles)
+    existingSchemaScriptHash :: FilePath -> IO ByteString
+    existingSchemaScriptHash schemaDir = do
+      effFile <- head <$> listDirectory schemaDir
+      getEffectSchemaScriptHash (schemaDir </> effFile)
+
+    getEffectSchemaScriptHash :: FilePath -> IO ByteString
+    getEffectSchemaScriptHash schemaPath = do
+      Right (effSchema :: EffectSchema) <- Aeson.eitherDecodeFileStrict' schemaPath
       pure $ view #scriptHash effSchema
 
-    encodeEffectDatumErrorTests = describe "POST /encodeEffectDatum/[scripthash]" $ do
-      hash <- runIO existingSchemaScriptHash
+    encodeEffectFixtureSchemaTests = describe "valid cases - POST /encodeEffectDatum/[scripthash]" $ do
+      let schemaPath = FixtureTests.schemaFixturesPath
+      registry' <- runIO $ loadEffects schemaPath
+      with (pure $ app schemaPath registry') $ do
+        tests <- runIO FixtureTests.prepareFixtureTests
+        for_ tests $ \test -> do
+          hash <- runIO $ EffectScriptHash <$> getEffectSchemaScriptHash (view #schemaPath test)
+          for_ (view #validDatums test) $ \(fp, jsonDatum) -> do
+            it ("should validate and encode " <> fp <> " content.") $ do
+              let resp = postJson @Aeson.Value ("/encodeEffectDatum/" <> encodeUtf8 (toUrlPiece hash)) jsonDatum
+              resp `shouldRespondWith` 200
+
+    encodeEffectDatumErrorTests = describe "POST /encodeEffectDatum/[scripthash] - error cases" $ do
+      hash <- runIO $ existingSchemaScriptHash effectsDir
       it "should return 400 if url doesn't contain valid script hash" $ do
         post "/encodeEffectDatum/0000000000000000000000000000000000000000000000000000000000000001" "" `shouldRespondWith` 400
       it "should return 404 if the effect does not exist" $ do
@@ -72,5 +94,5 @@ getEffectBodyMatcher fp = do
 postJson' :: forall (st :: Type). ByteString -> ByteString -> WaiSession st SResponse
 postJson' route = request methodPost route [(hContentType, "application/json" :: ByteString)] . BL.fromStrict
 
--- postJson :: forall (a :: Type) (st :: Type). Aeson.ToJSON a => ByteString -> a -> WaiSession st SResponse
--- postJson route = request methodPost route [(hContentType, "application/json" :: ByteString)] . Aeson.encode
+postJson :: forall (a :: Type) (st :: Type). Aeson.ToJSON a => ByteString -> a -> WaiSession st SResponse
+postJson route = request methodPost route [(hContentType, "application/json" :: ByteString)] . Aeson.encode

@@ -3,7 +3,7 @@
         "name": "list fixture",
         "description": "..."
     },
-    "scriptHash": "aabbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "scriptHash": "4abbccddeeff11223344556677889900aabbccddeeff112233445566",
     "datumSchema": {
         "type": "list",
         "elements": {

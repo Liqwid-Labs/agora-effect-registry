@@ -3,7 +3,7 @@
         "name": "bytes fixture",
         "description": "..."
     },
-    "scriptHash": "aabbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "scriptHash": "1abbccddeeff11223344556677889900aabbccddeeff112233445566",
     "datumSchema": {
         "type": "bytes"
     }

@@ -1,9 +1,9 @@
 {
     "meta": {
-        "name": "integer fixture",
+        "name": "plutus hash32 fixture",
         "description": "..."
     },
-    "scriptHash": "aabbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "scriptHash": "fabbccddeeff11223344556677889900aabbccddeeff112233445566",
     "datumSchema": {
         "type": "plutus/Hash32"
     }

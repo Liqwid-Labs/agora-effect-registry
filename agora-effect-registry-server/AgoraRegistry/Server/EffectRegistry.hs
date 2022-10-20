@@ -20,6 +20,7 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Optics.Core (view)
 import System.Directory.Extra (listDirectory)
+import Data.List (nub)
 
 -- | A map from scripthashes to effect schemas available in the registry.
 newtype EffectRegistry = EffectRegistry (Map ByteString EffectSchema)
@@ -38,7 +39,11 @@ loadEffects effectsDir = do
           , "\nError: "
           , err
           ]
-    Right effs -> pure $ EffectRegistry $ Map.fromList effs
+    Right effs -> do
+      let scripthashes = fst <$> effs
+      if length scripthashes /= length (nub scripthashes)
+        then fail "EffectRegistry contains multiple schemas for the same script hash."
+        else pure $ EffectRegistry $ Map.fromList effs
 
 -- | Loads and decodes an effect schema from a file.
 loadEffect ::
