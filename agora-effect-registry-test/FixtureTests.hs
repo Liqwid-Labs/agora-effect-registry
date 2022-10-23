@@ -1,6 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module FixtureTests (runFixtureTests, schemaFixturesPath, FixtureTest, prepareFixtureTests) where
 

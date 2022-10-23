@@ -20,14 +20,15 @@ common lang
     -fprint-explicit-kinds
 
   default-extensions:
-    NoStarIsType
     BangPatterns
     BinaryLiterals
     ConstraintKinds
     DataKinds
     DeriveAnyClass
+    DeriveGeneric
     DeriveTraversable
     DerivingVia
+    DuplicateRecordFields
     EmptyCase
     FlexibleContexts
     FlexibleInstances
@@ -37,6 +38,8 @@ common lang
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
+    NoFieldSelectors
+    NoStarIsType
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings
@@ -46,7 +49,7 @@ common lang
     TypeApplications
     TypeFamilies
     TypeOperators
-    NoFieldSelectors
+    UndecidableInstances
 
   default-language:   Haskell2010
 
