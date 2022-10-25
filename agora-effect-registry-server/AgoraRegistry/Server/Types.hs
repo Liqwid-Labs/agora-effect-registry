@@ -10,7 +10,6 @@ module AgoraRegistry.Server.Types (
   EffectScriptHash (EffectScriptHash),
 ) where
 
-import qualified Data.Text.Lazy as Text (toStrict)
 import Codec.Serialise (deserialiseOrFail, serialise)
 import Data.Aeson ((.:))
 import qualified Data.Aeson as Aeson
@@ -19,6 +18,7 @@ import Data.ByteString (ByteString, fromStrict)
 import qualified Data.ByteString.Base16 as BS16 (encodeBase16)
 import Data.ByteString.Lazy.Base16 (encodeBase16)
 import Data.Either.Extra (mapLeft)
+import qualified Data.Text.Lazy as Text (toStrict)
 import qualified PlutusLedgerApi.V2 as Plutus
 import Servant (
   FromHttpApiData (parseUrlPiece),

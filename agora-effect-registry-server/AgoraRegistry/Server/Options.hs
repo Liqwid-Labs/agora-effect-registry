@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 {- | Module     : AgoraRegistry.Server.Options
      Maintainer : michal@mlabs.city
      Description: Command line options for 'agora-effect-registry-server'.
@@ -19,6 +20,7 @@ import qualified Network.Wai.Handler.Warp as Warp
 import Optics.TH (makeFieldLabelsNoPrefix)
 import Options.Applicative ((<**>))
 import qualified Options.Applicative as Opt
+
 import AgoraRegistry.Server.Types (EffectScriptHash)
 
 {- | Information about hosted effect schema.

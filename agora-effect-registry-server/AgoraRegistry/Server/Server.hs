@@ -33,6 +33,7 @@ import Servant (
   HasServer (ServerT),
   hoistServer,
   serve,
+  serveDirectoryFileServer,
  )
 import Servant.API ((:<|>) (..))
 import Servant.Server (Application)
@@ -42,7 +43,6 @@ import AgoraRegistry.Server.Api (API, api)
 import AgoraRegistry.Server.AppM (AppM, encodeDatum, registryInfo, runApp)
 import AgoraRegistry.Server.EffectRegistry (EffectRegistry)
 import AgoraRegistry.Server.Options (HttpServerOptions)
-import Servant.Server.StaticFiles (serveDirectoryFileServer)
 
 handler :: FilePath -> ServerT API AppM
 handler effectsDir = do
