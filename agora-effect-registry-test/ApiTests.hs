@@ -3,9 +3,9 @@ module ApiTests (runApiTests) where
 import Test.Hspec (Spec, describe, it, runIO)
 
 import AgoraRegistry.Schema (EffectSchema)
-import AgoraRegistry.Server.Api (EffectScriptHash (EffectScriptHash))
 import AgoraRegistry.Server.EffectRegistry (loadEffects)
 import AgoraRegistry.Server.Server (app)
+import AgoraRegistry.Server.Types (EffectScriptHash (EffectScriptHash))
 import Control.Monad (forM_)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL

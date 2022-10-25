@@ -16,11 +16,11 @@ import qualified Data.Aeson as Aeson
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.Functor ((<&>))
+import Data.List (nub)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Optics.Core (view)
 import System.Directory.Extra (listDirectory)
-import Data.List (nub)
 
 -- | A map from scripthashes to effect schemas available in the registry.
 newtype EffectRegistry = EffectRegistry (Map ByteString EffectSchema)

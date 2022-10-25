@@ -1,8 +1,8 @@
 module Main (main) where
 
 import AgoraRegistry.Server.EffectRegistry (loadEffects)
-import AgoraRegistry.Server.Server (app)
-import Network.Wai.Handler.Warp (run)
+import AgoraRegistry.Server.Options (Options (HttpServerOption), parseOptions)
+import AgoraRegistry.Server.Server (runServer)
 
 -- | Paths from which the server loads effect schemas.
 effectsDir :: FilePath
@@ -10,6 +10,7 @@ effectsDir = "./effects"
 
 main :: IO ()
 main = do
+  HttpServerOption opts <- parseOptions
   registry <- loadEffects effectsDir
   putStrLn "Effect schemas loaded."
-  run 9999 (app effectsDir registry)
+  runServer effectsDir registry opts

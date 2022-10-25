@@ -10,6 +10,7 @@ module AgoraRegistry.Server.AppM (
   lookupEffectByScriptHash,
   runApp,
   askEffect,
+  registryInfo,
   encodeDatum,
 ) where
 
@@ -18,8 +19,9 @@ import qualified Data.Map as Map
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)
 import AgoraRegistry.Schema (EffectSchema)
-import AgoraRegistry.Server.Api (EffectDatum (EffectDatum), EffectScriptHash (EffectScriptHash))
 import AgoraRegistry.Server.EffectRegistry (EffectRegistry (EffectRegistry))
+import AgoraRegistry.Server.Options (RegistryInfo)
+import AgoraRegistry.Server.Types (EffectDatum (EffectDatum), EffectScriptHash (EffectScriptHash))
 import Data.ByteString.Lazy.UTF8 (fromString)
 import Servant (Handler, ServerError (errBody), err400, err404, throwError)
 
@@ -63,3 +65,6 @@ lookupEffectByScriptHash ::
   EffectRegistry ->
   Maybe EffectSchema
 lookupEffectByScriptHash (EffectScriptHash k) (EffectRegistry m) = Map.lookup k m
+
+registryInfo :: FilePath -> AppM RegistryInfo
+registryInfo _ = undefined

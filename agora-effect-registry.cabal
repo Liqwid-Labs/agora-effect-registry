@@ -20,6 +20,7 @@ common lang
     -fprint-explicit-kinds
 
   default-extensions:
+    NoStarIsType
     BangPatterns
     BinaryLiterals
     ConstraintKinds
@@ -38,8 +39,6 @@ common lang
     KindSignatures
     LambdaCase
     MultiParamTypeClasses
-    NoFieldSelectors
-    NoStarIsType
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings
@@ -50,6 +49,7 @@ common lang
     TypeFamilies
     TypeOperators
     UndecidableInstances
+    NoFieldSelectors
 
   default-language:   Haskell2010
 
@@ -75,12 +75,17 @@ common server-deps
     , cache
     , cardano-binary
     , cborg
+    , clock
     , http-types
+    , optparse-applicative
+    , prettyprinter
     , serialise
     , servant
     , servant-server
     , wai
+    , wai-app-static
     , wai-cors
+    , warp
 
 library
   import:          lang, deps
@@ -97,18 +102,19 @@ library agora-effect-registry-server
     AgoraRegistry.Server.Api
     AgoraRegistry.Server.AppM
     AgoraRegistry.Server.EffectRegistry
+    AgoraRegistry.Server.Options
     AgoraRegistry.Server.Server
+    AgoraRegistry.Server.Types
 
   build-depends:   agora-effect-registry
 
 executable agora-effect-registry-exe
-  import:         lang, deps
+  import:         lang, deps, server-deps
   hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
   build-depends:
     , agora-effect-registry
     , agora-effect-registry-server
-    , warp
 
 test-suite agora-effect-registry-test
   import:         lang, deps
@@ -125,7 +131,6 @@ test-suite agora-effect-registry-test
     , servant-client
     , servant-server
     , wai-extra
-    , warp
 
   other-modules:
     ApiTests
