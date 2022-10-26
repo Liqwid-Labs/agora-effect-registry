@@ -16,119 +16,122 @@ common lang
     -Wno-unused-do-bind -Wno-partial-type-signatures
     -Wmissing-export-lists -Wincomplete-record-updates
     -Wmissing-deriving-strategies -Wno-name-shadowing -Wunused-foralls
-    -fprint-explicit-foralls -fprint-explicit-kinds
+    -Wredundant-constraints -fprint-explicit-foralls
+    -fprint-explicit-kinds
 
   default-extensions:
     NoStarIsType
     BangPatterns
     BinaryLiterals
-    ConstrainedClassMethods
     ConstraintKinds
     DataKinds
     DeriveAnyClass
-    DeriveDataTypeable
-    DeriveFoldable
-    DeriveFunctor
     DeriveGeneric
-    DeriveLift
     DeriveTraversable
-    DerivingStrategies
     DerivingVia
-    DoAndIfThenElse
     DuplicateRecordFields
     EmptyCase
-    EmptyDataDecls
-    EmptyDataDeriving
-    ExistentialQuantification
-    ExplicitForAll
     FlexibleContexts
     FlexibleInstances
-    ForeignFunctionInterface
-    GADTSyntax
     GeneralisedNewtypeDeriving
     HexFloatLiterals
-    ImplicitPrelude
-    ImportQualifiedPost
     InstanceSigs
     KindSignatures
     LambdaCase
-    MonomorphismRestriction
     MultiParamTypeClasses
-    NamedFieldPuns
-    NamedWildCards
     NumericUnderscores
     OverloadedLabels
     OverloadedStrings
-    PackageImports
-    PartialTypeSignatures
-    PatternGuards
-    PolyKinds
-    PostfixOperators
-    QualifiedDo
-    RankNTypes
-    RelaxedPolyRec
     ScopedTypeVariables
     StandaloneDeriving
-    StandaloneKindSignatures
     TupleSections
     TypeApplications
     TypeFamilies
     TypeOperators
-    TypeSynonymInstances
     UndecidableInstances
-    ViewPatterns
     NoFieldSelectors
-    
+
   default-language:   Haskell2010
 
 common deps
   build-depends:
     , aeson
-    , ansi-terminal
-    , base                  >=4.14 && <5
+    , base               >=4.14 && <5
     , base-compat
     , base16
     , bytestring
-    , cache
-    , cardano-binary
-    , clock
     , containers
-    , data-default
-    , data-default-class
-    , generics-sop
-    , gitrev
-    , hashable
-    , http-types
-    , optparse-applicative
-    , plutarch
+    , extra
+    , optics-core
+    , optics-th
     , plutus-core
     , plutus-ledger-api
-    , plutus-tx
+    , template-haskell
+    , text
+    , utf8-string
+
+common server-deps
+  build-depends:
+    , cache
+    , cardano-binary
+    , cborg
+    , clock
+    , http-types
+    , optparse-applicative
     , prettyprinter
-    , recursion-schemes
     , serialise
     , servant
     , servant-server
-    , tagged
-    , template-haskell
-    , text
     , wai
+    , wai-app-static
     , wai-cors
     , warp
-    , dhall
-    , dhall-recursive-adt
-
-  mixins:
 
 library
   import:          lang, deps
-  hs-source-dirs:  src
+  hs-source-dirs:  agora-effect-registry
   exposed-modules:
+    AgoraRegistry.DatumValidation
+    AgoraRegistry.Parsing
+    AgoraRegistry.Schema
 
-  other-modules:
+library agora-effect-registry-server
+  import:          lang, deps, server-deps
+  hs-source-dirs:  agora-effect-registry-server
+  exposed-modules:
+    AgoraRegistry.Server.Api
+    AgoraRegistry.Server.AppM
+    AgoraRegistry.Server.EffectRegistry
+    AgoraRegistry.Server.Options
+    AgoraRegistry.Server.Server
+    AgoraRegistry.Server.Types
+
+  build-depends:   agora-effect-registry
 
 executable agora-effect-registry-exe
-  import:         lang, deps
-  hs-source-dirs: app
+  import:         lang, deps, server-deps
+  hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
-  build-depends:  agora-effect-registry
+  build-depends:
+    , agora-effect-registry
+    , agora-effect-registry-server
+
+test-suite agora-effect-registry-test
+  import:         lang, deps
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  hs-source-dirs: agora-effect-registry-test
+  build-depends:
+    , agora-effect-registry
+    , agora-effect-registry-server
+    , filepath
+    , hspec
+    , hspec-wai
+    , http-types
+    , servant-client
+    , servant-server
+    , wai-extra
+
+  other-modules:
+    ApiTests
+    FixtureTests

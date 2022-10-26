@@ -1,0 +1,19 @@
+{
+    "meta": {
+        "name": "constr fixture",
+        "description": "..."
+    },
+    "scriptHash": "2abbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "datumSchema": {
+        "type": "constr",
+        "tag": 2,
+        "fields": [
+            {
+                "type": "integer"
+            },
+            {
+                "type": "bytes"
+            }
+        ]
+        }
+}

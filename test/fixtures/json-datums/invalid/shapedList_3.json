@@ -1,0 +1,13 @@
+{
+    "type": "shapedList",
+    "elements": [
+        {
+            "type": "integer",
+            "value": 1
+        },
+        {
+            "type": "integer",
+            "value": 99
+        }
+    ]
+}

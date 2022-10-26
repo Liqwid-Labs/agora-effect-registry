@@ -1,0 +1,13 @@
+{
+    "meta": {
+        "name": "Test",
+        "description": "..."
+    },
+    "scriptHash": "babbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "datumSchema": {
+        "type": "oneOf",
+        "options": [
+            {"type":"integer"}
+        ]
+    }
+}

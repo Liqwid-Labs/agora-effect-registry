@@ -1,0 +1,6 @@
+{
+    "type": "plutus/Value",
+    "value": [
+        {"currencySymbol":"aabbccddeeff11223344556677889900aabbccddeeff112233445566", "tokenName":"", "amount":10}
+    ]
+}

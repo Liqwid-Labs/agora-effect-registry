@@ -1,0 +1,10 @@
+{
+    "meta": {
+        "name": "integer fixture",
+        "description": "..."
+    },
+    "scriptHash": "71bbccddeeff11223344556677889900aabbccddeeff112233445566",
+    "datumSchema": {
+        "type": "plutus/Address"
+    }
+}
