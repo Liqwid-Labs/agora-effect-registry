@@ -69,6 +69,9 @@ common deps
     , template-haskell
     , text
     , utf8-string
+    , mtl
+    , transformers
+    , gitrev
 
 common server-deps
   build-depends:

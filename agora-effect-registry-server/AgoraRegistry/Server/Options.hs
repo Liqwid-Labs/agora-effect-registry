@@ -11,6 +11,7 @@ module AgoraRegistry.Server.Options (
   HttpServerOptions (..),
   RegistryInfo (..),
   parseOptions,
+  SchemaInfo (..),
 ) where
 
 import qualified Data.Aeson as Aeson
