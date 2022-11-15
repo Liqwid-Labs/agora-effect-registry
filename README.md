@@ -46,7 +46,7 @@ This will give you information about the server and list out the available scrip
   "hostedEffectDatumSchemas": [
     {
       "name": "TreasuryWithdrawal",
-      "scriptHash": "581caabbccddeeff11223344556677889900aabbccddeeff112233445566"
+      "scriptHash": "581caabbccddeeff11223344556677889900aabbccddeeff11223344"
     },
     {
       "name": "MintNFT",
@@ -64,5 +64,84 @@ Queries the raw schema file from those that live in `/effects`.
 **Example response:**
 
 ```json
-TODO
+{
+    "meta": {
+        "name": "MintNFT",
+        "description": "Mints a single NFT based on the provided token name. This NFT is uniquely identified by the UTXO from which the GAT is burned is spent."
+    },
+    "scriptHash": "b00f0ebdd6ef98c82f8534b2040cd454c3cf3601b908ce212d43b74b",
+    "datumSchema": { 
+        "meta": {
+            "name": "tokenName",
+            "description": "The token name of the NFT to mint."
+        },
+        "type":"string"
+    }
+}
 ```
+
+### `POST /encodeEffectDatum/:scriptHash`
+
+Encode a datum that follows a particular effect schema into its hex-encoded CBOR representation. This endpoint also ensures the datum passed matches that of the schema it should be checked against, throwing an error if it doesn't.
+
+**Example request:**
+
+```sh
+curl \
+    -X POST \
+    localhost:3838/encodeEffectDatum/babbccddeeff11223344556677889900aabbccddeeff112233445566 \
+    -H 'Content-Type: application/json' \
+    -d '{ "type": "integer", "value": 42 }'
+```
+
+**Example response:**
+
+```json
+{"cborDatum":"182a"}
+```
+
+# Addendum: Schema types
+
+When writing a datum schema, a number of different building blocks are available to you. These will be listed below.
+
+### `list`
+
+**Example structure**:
+```json
+{ "type": "list", "elements": ... }
+```
+
+Represents a homogeneous list. The `elements` field is yet another datum schema type, which represents the type of all elements of this list. Keep in mind that the `elements` field is a _single_ type, as opposed to a list of types. This is slightly unintuitive due to the naming. See it as when you write `List a`, `a` is a single type to which all elements must conform to.
+
+### `shapedList`
+
+**Example structure:**
+```json
+{ "type": "shapedList", "elements": [..., ...] }
+```
+
+Represents a _heterogeneous_ list. Unlike `list`, this may contain different types for each element, but they are in a particular predetermined order, as given by the `elements` field. When representing a tuple of two integers, we could for example encode it like so:
+
+```json
+{
+  "type": "shapedList",
+  "elements": [
+    { "type": "integer" },
+    { "type": "integer" }
+  ]
+}
+```
+
+In many ways, this is similar to how `constr` works.
+
+---
+
+Additionally, the following singleton schema types are available which can be used to represent frequently used plutus types:
+
+- `plutus/Address`
+- `plutus/Value`
+- `plutus/Credential`
+- `plutus/Hash32`
+- `plutus/Hash28`
+
+Each can be encoded with additional metadata just like all other types.
