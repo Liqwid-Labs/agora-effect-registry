@@ -104,23 +104,55 @@ curl \
 
 When writing a datum schema, a number of different building blocks are available to you. These will be listed below.
 
-### `list`
+### `integer` and `bytes`
 
 **Example structure**:
+
+An integer (`I` in `PlutusCore.Data`):
+
+```json
+{ "type": "integer" }
+```
+
+A bytestring (`B` in `PlutusCore.Data`):
+
+```json
+{ "type": "bytes" }
+```
+
+These two types are primitive types that contain no subvalues inside of the schema. In other words: they are leaves in the schema tree.
+
+### `constr`
+
+A constr tag (`Constr` in `PlutusCore.Data`). This tags a particular struct with a integer tag. This is particularly useful in combination with `oneOf`, to create tagged unions.
+
+**Example structure**:
+
+```json
+{ "type": "constr", "tag": ..., "fields": [..., ...] }
+```
+
+### `list`
+
+A homogeneous list (`List` in `PlutusCore.Data`). The `elements` field is yet another datum schema type, which represents the type of all elements of this list. Keep in mind that the `elements` field is a _single_ type, as opposed to a list of types. This is slightly unintuitive due to the naming. See it as when you write `List a`, `a` is a single type to which all elements must conform to.
+
+**Example structure**:
+
 ```json
 { "type": "list", "elements": ... }
 ```
 
-Represents a homogeneous list. The `elements` field is yet another datum schema type, which represents the type of all elements of this list. Keep in mind that the `elements` field is a _single_ type, as opposed to a list of types. This is slightly unintuitive due to the naming. See it as when you write `List a`, `a` is a single type to which all elements must conform to.
-
 ### `shapedList`
 
-**Example structure:**
+**Example structure**:
+
+Represents a _heterogeneous_ list (also `List` in `PlutusCore.Data`). Unlike `list`, this may contain different types for each element, but they are in a particular predetermined order, as given by the `elements` field.
+
 ```json
 { "type": "shapedList", "elements": [..., ...] }
 ```
 
-Represents a _heterogeneous_ list. Unlike `list`, this may contain different types for each element, but they are in a particular predetermined order, as given by the `elements` field. When representing a tuple of two integers, we could for example encode it like so:
+When representing a tuple of two integers, we could for example encode it like so:
 
 ```json
 {
@@ -132,7 +164,31 @@ Represents a _heterogeneous_ list. Unlike `list`, this may contain different typ
 }
 ```
 
-In many ways, this is similar to how `constr` works.
+In many ways, this is similar to how `constr` works, but without the tag.
+
+### `map`
+
+A map (`Map` in `PlutusCore.Data`). This maps `keys` to `values`. Both are homogeneous in their types, so they are a single subschema, similarly to `list`.
+
+**Example structure**:
+
+```json
+{
+  "type": "map",
+  "keys": ...,
+  "values": ...
+}
+```
+
+### `oneOf`
+
+`oneOf` allows encoding variants into the schema. This will usually be used in combination with `constr` in order to encode tagged unions, but can also encode other variants.
+
+**Example structure**:
+
+```json
+{ "type": "oneOf", "options": [..., ...] }
+```
 
 ---
 
