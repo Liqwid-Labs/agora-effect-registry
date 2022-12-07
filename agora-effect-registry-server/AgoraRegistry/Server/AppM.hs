@@ -16,8 +16,8 @@ module AgoraRegistry.Server.AppM (
   encodeDatum,
 ) where
 
-import qualified Data.Aeson as Aeson
-import qualified Data.Map as Map
+import Data.Aeson qualified as Aeson
+import Data.Map qualified as Map
 import Development.GitRev (gitBranch, gitHash)
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)

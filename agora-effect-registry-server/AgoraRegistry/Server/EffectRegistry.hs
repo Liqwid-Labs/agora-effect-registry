@@ -12,13 +12,13 @@ module AgoraRegistry.Server.EffectRegistry (
 ) where
 
 import AgoraRegistry.Schema (EffectSchema)
-import qualified Data.Aeson as Aeson
+import Data.Aeson qualified as Aeson
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.Functor ((<&>))
 import Data.List (nub)
 import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Optics.Core (view)
 import System.Directory.Extra (listDirectory)
 

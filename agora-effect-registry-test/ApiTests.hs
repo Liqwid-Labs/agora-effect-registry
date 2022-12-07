@@ -7,13 +7,13 @@ import AgoraRegistry.Server.EffectRegistry (loadEffects)
 import AgoraRegistry.Server.Server (app)
 import AgoraRegistry.Server.Types (EffectScriptHash (EffectScriptHash))
 import Control.Monad (forM_)
-import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Lazy as BL
+import Data.Aeson qualified as Aeson
+import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.UTF8 (ByteString, fromString)
 import Data.Foldable (for_)
 import Data.Kind (Type)
 import Data.Text.Encoding (encodeUtf8)
-import qualified FixtureTests
+import FixtureTests qualified
 import Network.HTTP.Types (hContentType, methodPost)
 import Network.HTTP.Types.Header (Header)
 import Network.Wai.Test (SResponse)

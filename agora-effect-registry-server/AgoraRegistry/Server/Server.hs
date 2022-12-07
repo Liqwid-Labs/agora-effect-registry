@@ -12,9 +12,9 @@ module AgoraRegistry.Server.Server (
 
 import Control.Monad.IO.Class (MonadIO (..))
 import Data.Function ((&))
-import qualified Network.HTTP.Types as Http
-import qualified Network.Wai as Wai
-import qualified Network.Wai.Handler.Warp as Warp
+import Network.HTTP.Types qualified as Http
+import Network.Wai qualified as Wai
+import Network.Wai.Handler.Warp qualified as Warp
 import Network.Wai.Middleware.Cors (
   CorsResourcePolicy (corsRequestHeaders),
   cors,
