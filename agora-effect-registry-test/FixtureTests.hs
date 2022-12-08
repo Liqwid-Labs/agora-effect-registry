@@ -3,8 +3,8 @@
 module FixtureTests (runFixtureTests, schemaFixturesPath, FixtureTest, prepareFixtureTests) where
 
 import Control.Arrow (first)
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Types as Aeson
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Types qualified as Aeson
 import Data.Bifunctor (bimap)
 import Data.Either (fromRight, isLeft, isRight)
 import Data.Foldable (for_, traverse_)

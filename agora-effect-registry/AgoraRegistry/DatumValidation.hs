@@ -40,21 +40,22 @@ import AgoraRegistry.Schema (
 import Control.Applicative ((<|>))
 import Control.Monad (when, zipWithM)
 import Data.Aeson (withObject, (.:))
-import qualified Data.Aeson as Aeson
+import Data.Aeson qualified as Aeson
 import Data.Aeson.Types (parseEither)
-import qualified Data.Aeson.Types as Aeson
+import Data.Aeson.Types qualified as Aeson
 import Data.Bitraversable (Bitraversable (bitraverse))
 import Data.ByteString (ByteString)
-import qualified Data.ByteString as B
+import Data.ByteString qualified as B
 import Data.ByteString.UTF8 (fromString)
 import Data.Function ((&))
 import Data.List.Extra (groupSortBy)
 import Data.List.NonEmpty (NonEmpty ((:|)))
-import qualified Data.List.NonEmpty as NE
+import Data.List.NonEmpty qualified as NE
 import Data.Ord (comparing)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Optics.Core (view, (%))
-import qualified PlutusLedgerApi.V2 as Plutus
+import PlutusLedgerApi.V1 (ScriptHash (ScriptHash))
+import PlutusLedgerApi.V2 qualified as Plutus
 
 {- | Provided an effect datum schema and a datum encoded in JSON it validates
      the datum conformance to the schema and returns the datum as
@@ -110,7 +111,9 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
     addFailMessage has exp =
       Aeson.modifyFailure
         ( (++) $
-            "While validating '" <> has <> "' against '"
+            "While validating '"
+              <> has
+              <> "' against '"
               <> schemaName exp
               <> "' schema: "
         )
@@ -172,7 +175,8 @@ parsePlutusType s v = flip (Aeson.withObject "PlutusType") v $ \o -> do
         <$> (parseHash 28 =<< o .: "value")
     _ ->
       fail $
-        "Type mismatch, expected schema: " <> show s
+        "Type mismatch, expected schema: "
+          <> show s
           <> " got: "
           <> schemaType
 
@@ -193,7 +197,7 @@ parseCredential = addFailMessage ("Parsing credential: " ++) $
     ctor
       & either
         (fmap (Plutus.PubKeyCredential . Plutus.PubKeyHash) . parseHash 28)
-        (fmap (Plutus.ScriptCredential . Plutus.ValidatorHash) . parseHash 28)
+        (fmap (Plutus.ScriptCredential . ScriptHash) . parseHash 28)
 
 {- | Dedicated JSON Parser for Plutus' Address type.
 

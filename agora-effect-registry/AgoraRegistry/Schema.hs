@@ -20,7 +20,7 @@ module AgoraRegistry.Schema (
 ) where
 
 import Data.Aeson ((.:), (.:?))
-import qualified Data.Aeson as Aeson
+import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)

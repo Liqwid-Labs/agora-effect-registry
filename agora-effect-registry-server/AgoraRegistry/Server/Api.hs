@@ -10,7 +10,7 @@ module AgoraRegistry.Server.Api (
   api,
 ) where
 
-import qualified Data.Aeson as Aeson
+import Data.Aeson qualified as Aeson
 import Data.Proxy (Proxy (Proxy))
 import Servant (
   Capture,

@@ -11,15 +11,16 @@ module AgoraRegistry.Server.Options (
   HttpServerOptions (..),
   RegistryInfo (..),
   parseOptions,
+  SchemaInfo (..),
 ) where
 
-import qualified Data.Aeson as Aeson
+import Data.Aeson qualified as Aeson
 import Data.Text (Text)
-import qualified GHC.Generics as GHC
-import qualified Network.Wai.Handler.Warp as Warp
+import GHC.Generics qualified as GHC
+import Network.Wai.Handler.Warp qualified as Warp
 import Optics.TH (makeFieldLabelsNoPrefix)
 import Options.Applicative ((<**>))
-import qualified Options.Applicative as Opt
+import Options.Applicative qualified as Opt
 
 import AgoraRegistry.Server.Types (EffectScriptHash)
 

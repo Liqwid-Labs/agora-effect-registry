@@ -13,13 +13,13 @@ module AgoraRegistry.Parsing (
 ) where
 
 import Control.Monad (guard)
-import qualified Data.Aeson.Types as Aeson
+import Data.Aeson.Types qualified as Aeson
 import Data.ByteString (ByteString)
-import qualified Data.ByteString.Base16 as Base16 (decodeBase16)
+import Data.ByteString.Base16 qualified as Base16 (decodeBase16)
 import Data.Text (Text)
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 import Data.Text.Encoding (encodeUtf8)
-import qualified PlutusLedgerApi.V2 as Plutus
+import PlutusLedgerApi.V2 qualified as Plutus
 
 -- | Like `Control.Monad.guard`, but accepts an error message.
 parseGuard :: String -> Bool -> Aeson.Parser ()
@@ -37,7 +37,8 @@ parseHex s =
 parseHex' :: Int -> Text -> Aeson.Parser ByteString
 parseHex' l s = do
   parseGuard
-    ( "Required hex string length is: " <> show (2 * l)
+    ( "Required hex string length is: "
+        <> show (2 * l)
         <> " got: "
         <> show s
     )
