@@ -20,7 +20,6 @@ common lang
     -fprint-explicit-kinds
 
   default-extensions:
-    NoFieldSelectors
     NoStarIsType
     BangPatterns
     BinaryLiterals
@@ -51,6 +50,7 @@ common lang
     TypeFamilies
     TypeOperators
     UndecidableInstances
+    NoFieldSelectors
 
   default-language:   Haskell2010
 
