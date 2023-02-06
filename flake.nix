@@ -1,57 +1,55 @@
 {
   description = "agora-effect-registry";
 
-  nixConfig = {
-    extra-experimental-features = [ "nix-command" "flakes" "ca-derivations" ];
-    extra-substituters = [ "https://cache.iog.io" "https://public-plutonomicon.cachix.org" "https://mlabs.cachix.org" ];
-    extra-trusted-public-keys = [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "public-plutonomicon.cachix.org-1:3AKJMhCLn32gri1drGuaZmFrmnue+KkKrhhubQk/CWc=" ];
-    allow-import-from-derivation = "true";
-    bash-prompt = "\\[\\e[0m\\][\\[\\e[0;2m\\]liqwid-nix \\e[0;5m\\]2.0.\\[\\e[0;93m\\]\\w\\[\\e[0m\\]]\\[\\e[0m\\]$ \\[\\e[0m\\]";
-    max-jobs = "auto";
-    auto-optimise-store = "true";
-  };
-
   inputs = {
     nixpkgs.follows = "liqwid-nix/nixpkgs";
-    nixpkgs-latest.url = "github:NixOS/nixpkgs";
+    nixpkgs-latest.url = "github:NixOS/nixpkgs?rev=a2494bf2042d605ca1c4a679401bdc4971da54fb";
 
     liqwid-nix = {
-      url = "github:Liqwid-Labs/liqwid-nix/main";
+      url = "github:Liqwid-Labs/liqwid-nix/v2.3.0";
       inputs.nixpkgs-latest.follows = "nixpkgs-latest";
     };
   };
 
-  outputs = { self, liqwid-nix, flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit self; } {
-      imports = liqwid-nix.allModules ++ [
-        ({ self, ... }:
-          {
-            perSystem = { config, pkgs', self', inputs, system, ... }:
-              let
-                pkgs = import self.inputs.nixpkgs {
-                  inherit system;
-                };
-              in
-              {
-                onchain.default = {
-                  src = ./.;
-                  ghc.version = "ghc925";
-                  shell = { };
-                  enableBuildChecks = true;
-                  extraHackageDeps = [ ];
-                };
-                ci.required = [
-                  # Currently, tests are disabled because fixture tests are difficult to run in Nix.
-                  "default_build:agora-effect-registry:lib:agora-effect-registry"
-                  "default_build:agora-effect-registry:lib:agora-effect-registry-server"
-                  "default_build:agora-effect-registry:exe:agora-effect-registry-exe"
-                  "default_haskellFormatCheck"
-                  "default_cabalFormatCheck"
-                ];
-              };
-          })
+  outputs = inputs@{ self, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.liqwid-nix.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
-      perSystem = { config, self', inputs', pkgs, system, ... }: { };
+      perSystem = { config, self', inputs', pkgs, system, ... }:
+        let
+          pkgs = import inputs.nixpkgs-latest {
+            inherit system;
+          };
+        in
+        {
+          onchain.default = {
+            src = ./.;
+            ghc.version = "ghc925";
+            fourmolu.package = pkgs.haskell.packages.ghc924.fourmolu_0_9_0_0;
+            hlint = { };
+            cabalFmt = { };
+            hasktags = { };
+            applyRefact = { };
+            shell = { };
+            enableBuildChecks = true;
+            extraHackageDeps = [
+            ];
+          };
+          ci.required = [
+            # Currently, tests are disabled because fixture tests are difficult to run in Nix.
+            "build:agora-effect-registry:lib:agora-effect-registry"
+            "build:agora-effect-registry:lib:agora-effect-registry-server"
+            "build:agora-effect-registry:exe:agora-effect-registry-exe"
+            "haskellFormatCheck"
+            "cabalFormatCheck"
+          ];
+        };
+
+      flake.hydraJobs.x86_64-linux = (
+        self.checks.x86_64-linux
+        // self.packages.x86_64-linux
+      );
     };
 }
