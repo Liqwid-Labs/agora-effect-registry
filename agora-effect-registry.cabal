@@ -73,6 +73,7 @@ common deps
     , text
     , transformers
     , utf8-string
+    , vector
 
 common server-deps
   build-depends:

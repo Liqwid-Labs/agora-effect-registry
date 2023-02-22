@@ -18,6 +18,7 @@ import AgoraRegistry.Parsing (
  )
 import AgoraRegistry.Schema (
   DatumSchema (
+    AnySchema,
     ByteStringSchema,
     ConstrSchema,
     IntegerSchema,
@@ -51,6 +52,7 @@ import Data.Function ((&))
 import Data.List.Extra (groupSortBy)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.List.NonEmpty qualified as NE
+import Data.Maybe (fromMaybe)
 import Data.Ord (comparing)
 import Data.Text qualified as T
 import Optics.Core (view, (%))
@@ -89,15 +91,24 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       (OneOfSchema ss, _) ->
         nonEmptyMsum $
           flip validateJsonDatum v . view #schema <$> ss
-      (ListSchema s, "list") -> parseList (view #schema s) o
+      (ListSchema s, "list") -> parseList (Just $ view #schema s) o
       (ShapedListSchema ss, "shapedList") ->
-        parseShapedList (view #schema <$> ss) o
+        parseShapedList (Just $ view #schema <$> ss) o
       (ConstrSchema tag ss, "constr") ->
-        parseConstr tag (view #schema <$> ss) o
-      (MapSchema ks vs, "map") -> parseMap (view #schema ks) (view #schema vs) o
-      (IntegerSchema, "integer") -> Plutus.I <$> (o .: "value")
-      (ByteStringSchema, "bytes") -> Plutus.B <$> (parseHex =<< o .: "value")
-      (PlutusSchema ps, _) -> parsePlutusType ps v
+        parseConstr (Just (tag, view #schema <$> ss)) o
+      (MapSchema ks vs, "map") -> parseMap (Just (view #schema ks, view #schema vs)) o
+      (IntegerSchema, "integer") -> parseInteger o
+      (ByteStringSchema, "bytes") -> parseByte o
+      (PlutusSchema ps, _) -> parsePlutusType (Just ps) v
+      (AnySchema, _) ->
+        case jsonSchemaType of
+          "list" -> parseList Nothing o
+          "shapedList" -> parseShapedList Nothing o
+          "map" -> parseMap Nothing o
+          "constr" -> parseConstr Nothing o
+          "integer" -> parseInteger o
+          "bytes" -> parseByte o
+          _ -> parsePlutusType Nothing v
       _ ->
         fail $
           "Unknown schema type or schema mismatch. Got: "
@@ -117,68 +128,109 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
               <> schemaName exp
               <> "' schema: "
         )
-    -- parses json of shape:
-    -- {..., "elements":[[{keyschema},{valueschema}], ... ]}
+
+    parseByte :: Aeson.Object -> Aeson.Parser Plutus.Data
+    parseByte o = Plutus.B <$> (parseHex =<< o .: "value")
+
+    parseInteger :: Aeson.Object -> Aeson.Parser Plutus.Data
+    parseInteger o = Plutus.I <$> (o .: "value")
+
     parseMap ::
-      DatumSchema ->
-      DatumSchema ->
+      Maybe (DatumSchema, DatumSchema) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
-    parseMap ks vs o = do
+    parseMap s o = do
+      let (ks, vs) = fromMaybe (AnySchema, AnySchema) s
+
       elems <-
-        o .: "elements"
+        o
+          .: "elements"
           >>= traverse (bitraverse (validateJsonDatum ks) (validateJsonDatum vs))
+
       pure $ Plutus.Map elems
 
     parseConstr ::
-      Integer ->
-      NonEmpty DatumSchema ->
+      Maybe (Integer, (NonEmpty DatumSchema)) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
-    parseConstr expectedTag ss o = do
+    parseConstr s o = do
       tag <- o .: "tag"
-      parseGuard "Constr tag mismatch." (tag == expectedTag)
-      fields <- zipWithM validateJsonDatum (NE.toList ss) =<< (o .: "fields")
-      pure $ Plutus.Constr tag fields
+
+      s' <- case s of
+        Just (expectedTag, ss) -> do
+          parseGuard "Constr tag mismatch." (tag == expectedTag)
+
+          pure $ Right ss
+        Nothing -> pure $ Left AnySchema
+
+      parseListLike s' (Plutus.Constr tag) "fields" o
+
+    parseList ::
+      Maybe DatumSchema ->
+      Aeson.Object ->
+      Aeson.Parser Plutus.Data
+    parseList s =
+      let s' = maybe (Left AnySchema) Left s
+       in parseListLike s' Plutus.List "elements"
 
     parseShapedList ::
-      NonEmpty DatumSchema ->
+      Maybe (NonEmpty DatumSchema) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
-    parseShapedList ss o =
-      Plutus.List <$> do
-        values <- o .: "elements"
-        let schemas = NE.toList ss
-        parseGuard "Shaped list length mismatch." (length values == length schemas)
-        zipWithM validateJsonDatum schemas values
+    parseShapedList s =
+      let s' = maybe (Left AnySchema) Right s
+       in parseListLike s' Plutus.List "elements"
 
-    parseList :: DatumSchema -> Aeson.Object -> Aeson.Parser Plutus.Data
-    parseList elementsSchema o =
-      Plutus.List
-        <$> (traverse (validateJsonDatum elementsSchema) =<< o .: "elements")
+    parseListLike ::
+      Either DatumSchema (NonEmpty DatumSchema) ->
+      ([Plutus.Data] -> Plutus.Data) ->
+      Aeson.Key ->
+      Aeson.Object ->
+      Aeson.Parser Plutus.Data
+    parseListLike s c k o = do
+      values :: [Aeson.Value] <- o .: k
+
+      es <- case s of
+        Left s' -> traverse (validateJsonDatum s') values
+        Right ss -> do
+          let ss' = NE.toList ss
+          parseGuard "Shaped list length mismatch." (length values == length ss')
+          zipWithM validateJsonDatum ss' values
+
+      pure $ c es
 
 -- | Validates and encodes one the supported plutus type provided as a JSON.
-parsePlutusType :: PlutusTypeSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
+parsePlutusType :: Maybe PlutusTypeSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
 parsePlutusType s v = flip (Aeson.withObject "PlutusType") v $ \o -> do
   schemaType :: String <- o .: "type"
+
+  let parseHashSchema n = Plutus.toData <$> (parseHash n =<< o .: "value")
+      parseHash32Schema = parseHashSchema 32
+      parseHash28Schema = parseHashSchema 28
+
   case (s, schemaType) of
-    (AddressSchema, "plutus/Address") -> Plutus.toData <$> parseAddress v
-    (ValueSchema, "plutus/Value") -> Plutus.toData <$> parseValue v
-    (CredentialSchema, "plutus/Credential") ->
-      Plutus.toData
-        <$> parseCredential v
-    (Hash32Schema, "plutus/Hash32") ->
-      Plutus.toData
-        <$> (parseHash 32 =<< o .: "value")
-    (Hash28Schema, "plutus/Hash28") ->
-      Plutus.toData
-        <$> (parseHash 28 =<< o .: "value")
+    (Just AddressSchema, "plutus/Address") -> parseAddress v
+    (Just ValueSchema, "plutus/Value") -> parseValue v
+    (Just CredentialSchema, "plutus/Credential") ->
+      parseCredential v
+    (Just Hash32Schema, "plutus/Hash32") -> parseHash32Schema
+    (Just Hash28Schema, "plutus/Hash28") -> parseHash28Schema
+    (Nothing, _) -> case schemaType of
+      "plutus/Address" -> parseAddress v
+      "plutus/Value" -> parseValue v
+      "plutus/Credential" -> parseCredential v
+      "plutus/Hash32" -> parseHash32Schema
+      "plutus/Hash28" -> parseHash28Schema
+      _ -> fail $ "Unknown schema type: " <> show schemaType
     _ ->
       fail $
         "Type mismatch, expected schema: "
           <> show s
           <> " got: "
           <> schemaType
+
+parseCredential :: Aeson.Value -> Aeson.Parser Plutus.Data
+parseCredential = fmap Plutus.toData . parseCredential'
 
 {- | Dedicated JSON Parser for Plutus' Credential type.
      Example:
@@ -188,8 +240,8 @@ parsePlutusType s v = flip (Aeson.withObject "PlutusType") v $ \o -> do
     }
     ```
 -}
-parseCredential :: Aeson.Value -> Aeson.Parser Plutus.Credential
-parseCredential = addFailMessage ("Parsing credential: " ++) $
+parseCredential' :: Aeson.Value -> Aeson.Parser Plutus.Credential
+parseCredential' = addFailMessage ("Parsing credential: " ++) $
   withObject "Credential" $ \o -> do
     ctor <-
       Aeson.modifyFailure (const "Missing 'pubkey' or 'script' field.") $
@@ -211,10 +263,10 @@ parseCredential = addFailMessage ("Parsing credential: " ++) $
     }
     ```
 -}
-parseAddress :: Aeson.Value -> Aeson.Parser Plutus.Address
+parseAddress :: Aeson.Value -> Aeson.Parser Plutus.Data
 parseAddress =
   addFailMessage ("Parsing address: " ++) $
-    fmap (`Plutus.Address` Nothing) . parseCredential
+    fmap (Plutus.toData . (`Plutus.Address` Nothing)) . parseCredential'
 
 {- | Dedicated JSON Parser for Plutus' Value type.
      An example json form that will be accepted:
@@ -230,12 +282,12 @@ parseAddress =
     }
     ```
 -}
-parseValue :: Aeson.Value -> Aeson.Parser Plutus.Value
+parseValue :: Aeson.Value -> Aeson.Parser Plutus.Data
 parseValue = addFailMessage ("Parsing value: " ++) $
   \v -> flip (Aeson.withObject "plutus/value") v $ \o -> do
     values <- traverse parseFlatten =<< o .: "value"
     valueMap <- either fail pure (buildValueMap values)
-    pure $ Plutus.Value valueMap
+    pure $ Plutus.toData $ Plutus.Value valueMap
   where
     buildValueMap ::
       [(Plutus.CurrencySymbol, Plutus.TokenName, Integer)] ->
