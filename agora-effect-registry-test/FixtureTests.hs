@@ -69,12 +69,13 @@ prepareFixtureTests = do
   invalid <- loadFixtures invalidDatumFixturesPath
   for schemas $ \(schemaPath, schema) -> do
     let schemaName = takeBaseName schemaPath
+        schemaPrefix = schemaName <> "_"
     let validDatums =
           first takeBaseName
-            <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) valid
+            <$> filter ((schemaPrefix `isPrefixOf`) . takeBaseName . fst) valid
     let invalidDatums =
           first takeBaseName
-            <$> filter ((schemaName `isPrefixOf`) . takeBaseName . fst) invalid
+            <$> filter ((schemaPrefix `isPrefixOf`) . takeBaseName . fst) invalid
     pure $ FixtureTest schemaPath schema validDatums invalidDatums
 
 runFixtureTest :: FixtureTest -> Spec

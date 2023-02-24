@@ -1,0 +1,10 @@
+{
+  "meta": {
+      "name": "any fixture",
+      "description": "..."
+  },
+  "scriptHash": "9abbccddeeff11223344556677889900aabbccddeeff112233445566",
+  "datumSchema": {
+      "type": "any"
+  }
+}
