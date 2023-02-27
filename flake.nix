@@ -9,6 +9,8 @@
       url = "github:Liqwid-Labs/liqwid-nix/v2.3.0";
       inputs.nixpkgs-latest.follows = "nixpkgs-latest";
     };
+
+    liqwid-libs.url = "github:Liqwid-Labs/liqwid-libs";
   };
 
   outputs = inputs@{ self, flake-parts, ... }:
@@ -35,6 +37,10 @@
             shell = { };
             enableBuildChecks = true;
             extraHackageDeps = [
+              "${inputs.liqwid-libs}/liqwid-plutarch-extra"
+              "${inputs.liqwid-libs.inputs.ply}/ply-core"
+              "${inputs.liqwid-libs.inputs.ply}/ply-plutarch"
+              "${inputs.liqwid-libs}/plutarch-quickcheck"
             ];
           };
           ci.required = [
