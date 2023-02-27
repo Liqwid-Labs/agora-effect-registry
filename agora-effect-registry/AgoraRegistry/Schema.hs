@@ -58,8 +58,8 @@ instance Aeson.FromJSON Metadata
 
      @since 0.1.0
 -}
-data Schema' a = Schema
-  { meta :: Maybe Metadata
+data Schema' meta a = Schema
+  { meta :: Maybe meta
   -- ^ An optional description of a schema piece.
   , schema :: a
   -- ^ The actual schema.
@@ -75,7 +75,7 @@ data Schema' a = Schema
 makeFieldLabelsNoPrefix ''Schema'
 
 -- | @since 0.1.0
-instance Aeson.FromJSON a => Aeson.FromJSON (Schema' a) where
+instance (Aeson.FromJSON meta, Aeson.FromJSON a) => Aeson.FromJSON (Schema' meta a) where
   parseJSON v = flip (Aeson.withObject "Schema") v $ \o -> do
     meta <- o .:? "meta"
     schema <- Aeson.parseJSON v
@@ -129,17 +129,17 @@ instance Aeson.FromJSON PlutusTypeSchema where
 
      @since 0.1.0
 -}
-data DatumSchema
+data DatumSchema meta
   = -- | Homogeneous list. Encodes Data's List ctor.
-    ListSchema Schema
+    ListSchema (Schema meta)
   | -- | Heterogenous list. Encodes Data's List ctor.
-    ShapedListSchema (NonEmpty Schema)
+    ShapedListSchema (NonEmpty (Schema meta))
   | -- | Constructor for records.
-    ConstrSchema Integer (NonEmpty Schema)
+    ConstrSchema Integer (NonEmpty (Schema meta))
   | -- | Will accept anything that adheres to any schema from a given set.
-    OneOfSchema (NonEmpty Schema)
+    OneOfSchema (NonEmpty (Schema meta))
   | -- | Encodes Data's Map ctor.
-    MapSchema Schema Schema
+    MapSchema (Schema meta) (Schema meta)
   | -- | Encodes Data's I ctor.
     IntegerSchema
   | -- | Encodes Data's B ctor.
@@ -151,18 +151,19 @@ data DatumSchema
   deriving stock
     ( -- | @since 0.1.0
       Eq
-    , -- | @since 0.1.0
-      Show
     )
 
+-- | @since 0.1.0
+deriving stock instance Show meta => Show (DatumSchema meta)
+
 -- | Helper type alias.
-type Schema = Schema' DatumSchema
+type Schema meta = Schema' meta (DatumSchema meta)
 
 -- | @since 0.1.0
 makeFieldLabelsNoPrefix ''DatumSchema
 
 -- | @since 0.1.0
-instance Aeson.FromJSON DatumSchema where
+instance Aeson.FromJSON meta => Aeson.FromJSON (DatumSchema meta) where
   parseJSON v = flip (Aeson.withObject "DatumSchema") v $ \o -> do
     schemaType :: Text <- o .: "type"
     case schemaType of
@@ -180,7 +181,7 @@ instance Aeson.FromJSON DatumSchema where
 
     @since 0.1.0
 -}
-schemaName :: DatumSchema -> String
+schemaName :: forall meta. DatumSchema meta -> String
 schemaName = \case
   ListSchema _ -> "list"
   ShapedListSchema _ -> "shapedList"
@@ -201,7 +202,7 @@ data EffectSchema = EffectSchema
   -- ^ Description of the effect.
   , scriptHash :: ByteString
   -- ^ Hash of the effect validator script.
-  , datumSchema :: Schema
+  , datumSchema :: Schema Metadata
   -- ^ Schema which all valid datums must abide.
   }
   deriving stock

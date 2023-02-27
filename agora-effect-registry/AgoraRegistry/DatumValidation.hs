@@ -83,7 +83,7 @@ validateEffectDatum' es = validateJsonDatum (view (#datumSchema % #schema) es)
 
      @since 0.1.0
 -}
-validateJsonDatum :: DatumSchema -> Aeson.Value -> Aeson.Parser Plutus.Data
+validateJsonDatum :: forall meta. Show meta => DatumSchema meta -> Aeson.Value -> Aeson.Parser Plutus.Data
 validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> do
   jsonSchemaType :: String <- o .: "type"
   addFailMessage jsonSchemaType expectedSchema $
@@ -136,7 +136,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
     parseInteger o = Plutus.I <$> (o .: "value")
 
     parseMap ::
-      Maybe (DatumSchema, DatumSchema) ->
+      Maybe (DatumSchema meta, DatumSchema meta) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseMap s o = do
@@ -150,7 +150,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       pure $ Plutus.Map elems
 
     parseConstr ::
-      Maybe (Integer, (NonEmpty DatumSchema)) ->
+      Maybe (Integer, (NonEmpty (DatumSchema meta))) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseConstr s o = do
@@ -166,7 +166,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       parseListLike s' (Plutus.Constr tag) "fields" o
 
     parseList ::
-      Maybe DatumSchema ->
+      Maybe (DatumSchema meta) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseList s =
@@ -174,7 +174,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
        in parseListLike s' Plutus.List "elements"
 
     parseShapedList ::
-      Maybe (NonEmpty DatumSchema) ->
+      Maybe (NonEmpty (DatumSchema meta)) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseShapedList s =
@@ -182,7 +182,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
        in parseListLike s' Plutus.List "elements"
 
     parseListLike ::
-      Either DatumSchema (NonEmpty DatumSchema) ->
+      Either (DatumSchema meta) (NonEmpty (DatumSchema meta)) ->
       ([Plutus.Data] -> Plutus.Data) ->
       Aeson.Key ->
       Aeson.Object ->
