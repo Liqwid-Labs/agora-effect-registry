@@ -150,7 +150,7 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       pure $ Plutus.Map elems
 
     parseConstr ::
-      Maybe (Integer, (NonEmpty DatumSchema)) ->
+      Maybe (Integer, [DatumSchema]) ->
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseConstr s o = do
@@ -178,11 +178,11 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       Aeson.Object ->
       Aeson.Parser Plutus.Data
     parseShapedList s =
-      let s' = maybe (Left AnySchema) Right s
+      let s' = maybe (Left AnySchema) (Right . NE.toList) s
        in parseListLike s' Plutus.List "elements"
 
     parseListLike ::
-      Either DatumSchema (NonEmpty DatumSchema) ->
+      Either DatumSchema [DatumSchema] ->
       ([Plutus.Data] -> Plutus.Data) ->
       Aeson.Key ->
       Aeson.Object ->
@@ -193,9 +193,8 @@ validateJsonDatum expectedSchema v = flip (Aeson.withObject "Datum") v $ \o -> d
       es <- case s of
         Left s' -> traverse (validateJsonDatum s') values
         Right ss -> do
-          let ss' = NE.toList ss
-          parseGuard "Shaped list length mismatch." (length values == length ss')
-          zipWithM validateJsonDatum ss' values
+          parseGuard "Shaped list length mismatch." (length values == length ss)
+          zipWithM validateJsonDatum ss values
 
       pure $ c es
 

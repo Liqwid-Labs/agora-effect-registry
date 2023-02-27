@@ -135,7 +135,7 @@ data DatumSchema
   | -- | Heterogenous list. Encodes Data's List ctor.
     ShapedListSchema (NonEmpty Schema)
   | -- | Constructor for records.
-    ConstrSchema Integer (NonEmpty Schema)
+    ConstrSchema Integer [Schema]
   | -- | Will accept anything that adheres to any schema from a given set.
     OneOfSchema (NonEmpty Schema)
   | -- | Encodes Data's Map ctor.
