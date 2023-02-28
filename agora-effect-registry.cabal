@@ -103,6 +103,7 @@ library
   hs-source-dirs:  agora-effect-registry
   exposed-modules:
     AgoraRegistry.DatumValidation
+    AgoraRegistry.Generation
     AgoraRegistry.Generation.Plutarch
     AgoraRegistry.Parsing
     AgoraRegistry.Schema
