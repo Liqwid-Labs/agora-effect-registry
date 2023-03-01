@@ -40,6 +40,7 @@ import GHC.TypeLits (
   TypeError,
   symbolVal,
  )
+import Optics.Core (view)
 import Plutarch.Api.V1 (
   PAddress,
   PCredential,
@@ -133,9 +134,9 @@ instance
   PHasDatumSchema (PDataSum xss)
   where
   pdatumSchema =
-    OneOfSchema $
-      NonEmpty.fromList $
-        pconstrSchemas' @xss 0
+    case pconstrSchemas' @xss 0 of
+      [x] -> view #schema x
+      xs -> OneOfSchema $ NonEmpty.fromList xs
 
 instance PHasDatumSchema PAddress where
   pdatumSchema = PlutusSchema AddressSchema
