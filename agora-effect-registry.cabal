@@ -125,6 +125,7 @@ executable agora-effect-registry-exe
   import:         lang, deps, server-deps
   hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
+  other-modules:  Options
   build-depends:
     , agora-effect-registry
     , agora-effect-registry-server
@@ -147,4 +148,5 @@ test-suite agora-effect-registry-test
 
   other-modules:
     ApiTests
+    CodeGenTests
     FixtureTests
