@@ -146,6 +146,8 @@ data DatumSchema
     ByteStringSchema
   | -- | Encodes supported 'higher-level' plutus types.
     PlutusSchema PlutusTypeSchema
+  | -- | Any plutus Data.
+    AnySchema
   deriving stock
     ( -- | @since 0.1.0
       Eq
@@ -171,6 +173,7 @@ instance Aeson.FromJSON DatumSchema where
       "map" -> MapSchema <$> o .: "keys" <*> o .: "values"
       "integer" -> pure IntegerSchema
       "bytes" -> pure ByteStringSchema
+      "any" -> pure AnySchema
       _ -> PlutusSchema <$> Aeson.parseJSON v
 
 {- | Returns a name for given datum schema.
@@ -187,6 +190,7 @@ schemaName = \case
   IntegerSchema -> "integer"
   ByteStringSchema -> "bytes"
   PlutusSchema ps -> plutusTypeSchemaName ps
+  AnySchema -> "any"
 
 {- | Data type that holds the effect datum schema.
 

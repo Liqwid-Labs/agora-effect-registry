@@ -1,0 +1,18 @@
+{
+  "meta": {
+      "name": "any fixture",
+      "description": "..."
+  },
+  "scriptHash": "babbccddeeff11223344556677889900aabbccddeeff112233445566",
+  "datumSchema": {
+    "type": "shapedList",
+    "elements": [
+      {
+        "type": "any"
+      },
+      {
+        "type": "any"
+      }
+    ]
+  }
+}

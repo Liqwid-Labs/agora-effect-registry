@@ -9,6 +9,9 @@ license:            Apache-2.0
 -- Common Stanza Declarations
 
 -- Language options, warnings, some options for plutus
+data-files:
+  effects/**/*.json
+  test/**/*.json
 
 common lang
   ghc-options:
@@ -73,6 +76,7 @@ common deps
     , text
     , transformers
     , utf8-string
+    , vector
 
 common server-deps
   build-depends:
