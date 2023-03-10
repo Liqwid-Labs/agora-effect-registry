@@ -60,16 +60,19 @@ common lang
 common deps
   build-depends:
     , aeson
-    , base               >=4.14 && <5
+    , base                   >=4.14 && <5
     , base-compat
     , base16
     , bytestring
     , containers
     , extra
+    , generics-sop
     , gitrev
+    , liqwid-plutarch-extra
     , mtl
     , optics-core
     , optics-th
+    , plutarch
     , plutus-core
     , plutus-ledger-api
     , template-haskell
@@ -100,6 +103,8 @@ library
   hs-source-dirs:  agora-effect-registry
   exposed-modules:
     AgoraRegistry.DatumValidation
+    AgoraRegistry.Generation
+    AgoraRegistry.Generation.Plutarch
     AgoraRegistry.Parsing
     AgoraRegistry.Schema
 
@@ -120,6 +125,7 @@ executable agora-effect-registry-exe
   import:         lang, deps, server-deps
   hs-source-dirs: agora-effect-registry-exe
   main-is:        Main.hs
+  other-modules:  Options
   build-depends:
     , agora-effect-registry
     , agora-effect-registry-server
@@ -142,4 +148,5 @@ test-suite agora-effect-registry-test
 
   other-modules:
     ApiTests
+    CodeGenTests
     FixtureTests

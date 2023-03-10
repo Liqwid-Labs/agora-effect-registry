@@ -10,19 +10,15 @@ module AgoraRegistry.Server.Options (
   Options (..),
   HttpServerOptions (..),
   RegistryInfo (..),
-  parseOptions,
   SchemaInfo (..),
 ) where
 
+import AgoraRegistry.Server.Types (EffectScriptHash)
 import Data.Aeson qualified as Aeson
 import Data.Text (Text)
 import GHC.Generics qualified as GHC
 import Network.Wai.Handler.Warp qualified as Warp
 import Optics.TH (makeFieldLabelsNoPrefix)
-import Options.Applicative ((<**>))
-import Options.Applicative qualified as Opt
-
-import AgoraRegistry.Server.Types (EffectScriptHash)
 
 {- | Information about hosted effect schema.
 
@@ -98,51 +94,8 @@ data HttpServerOptions = HttpServerOptions
       Eq
     )
 
-serverOpt :: Opt.Parser HttpServerOptions
-serverOpt =
-  HttpServerOptions
-    <$> Opt.option
-      Opt.auto
-      ( Opt.long "port"
-          <> Opt.short 'p'
-          <> Opt.metavar "PORT"
-          <> Opt.value 3838
-          <> Opt.help "The port to run the registry server on."
-      )
-    <*> Opt.switch
-      ( Opt.long "enable-cors-middleware"
-          <> Opt.short 'c'
-          <> Opt.help
-            ( unwords
-                [ "Enable CORS middleware."
-                , "This is usually required for some local servers."
-                , "For security reasons, this should be disabled in production."
-                ]
-            )
-      )
-
-opt :: Opt.Parser Options
-opt = HttpServerOption <$> serverOpt
-
-{- | Parse 'Options' from the command line arguments.
-
-     @since 1.0.0
--}
-parseOptions :: IO Options
-parseOptions = Opt.execParser p
-  where
-    p =
-      Opt.info
-        (opt <**> Opt.helper)
-        ( Opt.fullDesc
-            <> Opt.progDesc "The Agora Effect Registry service."
-        )
-
 ----------------------------------------
 -- Field Labels
-
--- | @since 1.0.0
-makeFieldLabelsNoPrefix ''Options
 
 -- | @since 1.0.0
 makeFieldLabelsNoPrefix ''HttpServerOptions

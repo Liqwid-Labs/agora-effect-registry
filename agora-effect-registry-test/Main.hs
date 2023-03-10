@@ -6,6 +6,7 @@ import Test.Hspec (Spec, describe, hspec, it)
 import AgoraRegistry.Server.EffectRegistry (loadEffects)
 
 import ApiTests (runApiTests)
+import CodeGenTests (codeGenTests)
 import FixtureTests (runFixtureTests)
 
 allEffectsAreParsed :: Spec
@@ -19,3 +20,4 @@ main = hspec $ do
   allEffectsAreParsed
   runFixtureTests
   runApiTests
+  codeGenTests

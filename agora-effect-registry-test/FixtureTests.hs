@@ -16,9 +16,11 @@ import Optics.Core (view)
 import Optics.TH (makeFieldLabelsNoPrefix)
 import System.Directory.Extra (listDirectory)
 import System.FilePath (takeBaseName, (</>))
-import Test.Hspec (Spec, describe, it, parallel, runIO, shouldSatisfy)
+import Test.Hspec (Spec, describe, it, parallel, runIO, shouldBe, shouldSatisfy)
 
 import AgoraRegistry.DatumValidation (validateEffectDatum)
+import Data.Aeson (Result (Success), fromJSON)
+import Data.Aeson.Types (ToJSON (toJSON))
 
 schemaFixturesPath :: FilePath
 schemaFixturesPath = "./test/fixtures/schemas"
@@ -86,8 +88,13 @@ runFixtureTest test =
       let schema' = Aeson.parseEither Aeson.parseJSON (view #jsonSchema test)
       it "Should decode the EffectSchema from JSON" $ do
         schema' `shouldSatisfy` isRight
+
       -- NOTE: safe here
       let effectSchema = fromRight undefined schema'
+
+      it "Schema should be unchanged after round-trip" $
+        fromJSON (toJSON effectSchema) `shouldBe` Success effectSchema
+
       -- valid datum tests
       for_ (view #validDatums test) $ \(n, datum) ->
         it ("Should parse and succesfully encode as Plutus data - " <> show n) $ do

@@ -19,15 +19,19 @@ module AgoraRegistry.Schema (
   schemaName,
 ) where
 
-import Data.Aeson ((.:), (.:?))
+import AgoraRegistry.Parsing (parseHex')
+import Data.Aeson (KeyValue ((.=)), (.:), (.:?))
 import Data.Aeson qualified as Aeson
+import Data.Aeson.KeyMap qualified as KeyMap
+import Data.Aeson.Types qualified as Aeson
 import Data.ByteString (ByteString)
+import Data.ByteString.Base16 qualified as Base16
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
+import Data.Text qualified as Text
 import GHC.Generics (Generic)
+import Optics.Core (view)
 import Optics.TH (makeFieldLabelsNoPrefix)
-
-import AgoraRegistry.Parsing (parseHex')
 
 {- | Provides additional description for schemas.
 
@@ -47,12 +51,15 @@ data Metadata = Metadata
     , -- | @since 0.1.0
       Generic
     )
+  deriving anyclass
+    ( -- | @since 0.1.0
+      Aeson.FromJSON
+    , -- | @since 0.1.0
+      Aeson.ToJSON
+    )
 
 -- | @since 0.1.0
 makeFieldLabelsNoPrefix ''Metadata
-
--- | @since 0.1.0
-instance Aeson.FromJSON Metadata
 
 {- | An auxilliary type aggregating a schema and its metadata.
 
@@ -135,7 +142,7 @@ data DatumSchema
   | -- | Heterogenous list. Encodes Data's List ctor.
     ShapedListSchema (NonEmpty Schema)
   | -- | Constructor for records.
-    ConstrSchema Integer (NonEmpty Schema)
+    ConstrSchema Integer [Schema]
   | -- | Will accept anything that adheres to any schema from a given set.
     OneOfSchema (NonEmpty Schema)
   | -- | Encodes Data's Map ctor.
@@ -175,6 +182,38 @@ instance Aeson.FromJSON DatumSchema where
       "bytes" -> pure ByteStringSchema
       "any" -> pure AnySchema
       _ -> PlutusSchema <$> Aeson.parseJSON v
+
+-- | Serialize a 'DatumSchema' into a Aeson object.
+datumSchemaToObject :: DatumSchema -> Aeson.Object
+datumSchemaToObject sch =
+  KeyMap.insert
+    "type"
+    (Aeson.String $ Text.pack $ schemaName sch)
+    (schemaInfoToObject sch)
+  where
+    object :: [Aeson.Pair] -> Aeson.Object
+    object = KeyMap.fromList
+
+    schemaInfoToObject :: DatumSchema -> Aeson.Object
+    schemaInfoToObject (ListSchema es) = object ["elements" .= es]
+    schemaInfoToObject (ShapedListSchema es) = object ["elements" .= es]
+    schemaInfoToObject (ConstrSchema tag fields) =
+      object ["tag" .= tag, "fields" .= fields]
+    schemaInfoToObject (OneOfSchema opts) = object ["options" .= opts]
+    schemaInfoToObject (MapSchema ks vs) = object ["keys" .= ks, "values" .= vs]
+    schemaInfoToObject _ = KeyMap.empty
+
+-- | @since 1.0.0
+instance Aeson.ToJSON DatumSchema where
+  toJSON = Aeson.Object . datumSchemaToObject
+
+-- | @since 1.0.0
+instance Aeson.ToJSON Schema where
+  toJSON x =
+    Aeson.Object $
+      KeyMap.insert "meta" (Aeson.toJSON $ view #meta x) $
+        datumSchemaToObject $
+          view #schema x
 
 {- | Returns a name for given datum schema.
 
@@ -221,3 +260,12 @@ instance Aeson.FromJSON EffectSchema where
     scriptHash <- parseHex' 28 =<< o .: "scriptHash"
     datumSchema <- o .: "datumSchema"
     pure $ EffectSchema meta scriptHash datumSchema
+
+-- | @since 1.0.0
+instance Aeson.ToJSON EffectSchema where
+  toJSON x =
+    Aeson.object
+      [ "meta" .= view #metadata x
+      , "scriptHash" .= Base16.encodeBase16 (view #scriptHash x)
+      , "datumSchema" .= view #datumSchema x
+      ]

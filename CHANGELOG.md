@@ -7,6 +7,9 @@ This format is based on [Keep A Changelog](https://keepachangelog.com/en/1.0.0).
 
 ### Added
 
+- Generate schema from plutarch data types.
+- cli: `verify` subcommand to verify an effect schema. 
+
 ### Modified
   
 ### Removed

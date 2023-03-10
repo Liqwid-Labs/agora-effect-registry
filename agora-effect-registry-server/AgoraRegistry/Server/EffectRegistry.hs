@@ -13,10 +13,8 @@ module AgoraRegistry.Server.EffectRegistry (
 
 import AgoraRegistry.Schema (EffectSchema)
 import Data.Aeson qualified as Aeson
-import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.Functor ((<&>))
-import Data.List (nub)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Optics.Core (view)
@@ -29,28 +27,27 @@ newtype EffectRegistry = EffectRegistry (Map ByteString EffectSchema)
 loadEffects :: FilePath -> IO EffectRegistry
 loadEffects effectsDir = do
   effFiles <- listDirectory effectsDir <&> fmap (\f -> effectsDir <> "/" <> f)
-  effectsE <- traverse loadEffect effFiles
-  case sequence effectsE of
-    Left (fp, err) ->
+  effects <- traverse loadEffect effFiles
+
+  let effectMap =
+        Map.fromList $ zip (view #scriptHash <$> effects) effects
+
+  if Map.size effectMap /= length effects
+    then fail "EffectRegistry contains multiple schemas for the same script hash."
+    else pure $ EffectRegistry effectMap
+
+-- | Loads and decodes an effect schema from a file.
+loadEffect ::
+  FilePath ->
+  IO EffectSchema
+loadEffect fp =
+  Aeson.eitherDecodeFileStrict fp >>= \case
+    Left err ->
       fail $
-        concat
+        mconcat
           [ "Could not load EffectSchema from file: "
           , fp
           , "\nError: "
           , err
           ]
-    Right effs -> do
-      let scripthashes = fst <$> effs
-      if length scripthashes /= length (nub scripthashes)
-        then fail "EffectRegistry contains multiple schemas for the same script hash."
-        else pure $ EffectRegistry $ Map.fromList effs
-
--- | Loads and decodes an effect schema from a file.
-loadEffect ::
-  FilePath ->
-  IO (Either (FilePath, String) (ByteString, EffectSchema))
-loadEffect fp =
-  Aeson.eitherDecodeFileStrict' fp
-    <&> bimap
-      (fp,)
-      (\eff -> (view #scriptHash eff, eff))
+    Right x -> pure x
